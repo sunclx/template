@@ -1,0 +1,9 @@
+- 前端框架: Vue 3 + TypeScript
+- 构建工具: Vite 7
+- 桌面应用框架: Tauri 2
+- UI组件库: Naive UI
+- 包管理器: pnpm
+- 状态管理: Pinia
+- 工具库: VueUse
+- 本地数据库: DuckDB
+- 数据查询: TanStack Query (Vue Query)

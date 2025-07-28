@@ -1,0 +1,295 @@
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import { matchText } from '../utils/pinyin'
+import {
+  useTemplatesQuery,
+  useDiseasesQuery,
+  useTemplateTypesQuery,
+  useTagsQuery,
+  useSearchTemplatesQuery,
+  useToggleFavoriteMutation,
+  useSaveTemplateMutation,
+  useDeleteTemplateMutation
+} from '../composables/useDatabase'
+import type {
+  Template,
+  Disease,
+  TemplateTypeInfo,
+  Tag,
+  FilterOptions,
+  CategoryView,
+  TemplateID
+} from '../types'
+
+/**
+ * 基于TanStack Query的模板管理状态store
+ */
+export const useTemplateQueryStore = defineStore('templateQuery', () => {
+  // 当前视图状态
+  const currentView = ref<CategoryView>('disease')
+  const selectedTemplate = ref<Template | null>(null)
+  const selectedCategory = ref<string>('all')
+  const filterOptions = ref<FilterOptions>({})
+  const isFilterPanelOpen = ref(false)
+  const searchKeyword = ref('')
+
+  // TanStack Query钩子
+  const templatesQuery = useTemplatesQuery()
+  const diseasesQuery = useDiseasesQuery()
+  const templateTypesQuery = useTemplateTypesQuery()
+  const tagsQuery = useTagsQuery()
+  
+  // 搜索查询（仅在有搜索关键词时启用）
+  const searchQuery = useSearchTemplatesQuery(searchKeyword)
+  
+  // 变更钩子
+  const toggleFavoriteMutation = useToggleFavoriteMutation()
+  const saveTemplateMutation = useSaveTemplateMutation()
+  const deleteTemplateMutation = useDeleteTemplateMutation()
+
+  // 计算属性 - 获取当前使用的模板数据
+  const currentTemplates = computed(() => {
+    // 如果有搜索关键词，使用搜索结果
+    if (searchKeyword.value && searchKeyword.value.trim().length > 0) {
+      return searchQuery.data.value || []
+    }
+    // 否则使用所有模板
+    return templatesQuery.data.value || []
+  })
+
+  // 计算属性 - 过滤后的模板列表
+  const filteredTemplates = computed(() => {
+    let result = currentTemplates.value
+
+    // 如果没有使用搜索API，则在前端进行拼音搜索
+    if (searchKeyword.value && searchKeyword.value.trim().length > 0 && !searchQuery.isEnabled.value) {
+      const keyword = searchKeyword.value.trim()
+      result = result.filter(template => {
+        // 搜索模板标题
+        if (matchText(template.title, keyword)) {
+          return true
+        }
+
+        // 搜索模板内容
+        return template.sections.some(section =>
+          matchText(section.title, keyword) ||
+          matchText(section.content, keyword)
+        )
+      })
+    }
+
+    // 按分类过滤
+    if (selectedCategory.value !== 'all') {
+      switch (currentView.value) {
+        case 'disease':
+          result = result.filter(template => template.disease === selectedCategory.value)
+          break
+        case 'type':
+          result = result.filter(template => template.templateType === selectedCategory.value)
+          break
+        case 'tag':
+          result = result.filter(template => template.tags.includes(selectedCategory.value))
+          break
+      }
+    }
+
+    // 按筛选条件过滤
+    if (filterOptions.value.isFavorite) {
+      result = result.filter(template => template.isFavorite)
+    }
+
+    return result
+  })
+
+  // 计算属性 - 当前分类列表
+  const currentCategories = computed(() => {
+    switch (currentView.value) {
+      case 'disease':
+        return diseasesQuery.data.value || []
+      case 'type':
+        return templateTypesQuery.data.value || []
+      case 'tag':
+        return tagsQuery.data.value || []
+      default:
+        return []
+    }
+  })
+
+  // 计算属性 - 加载状态
+  const isLoading = computed(() => {
+    return templatesQuery.isLoading.value ||
+           diseasesQuery.isLoading.value ||
+           templateTypesQuery.isLoading.value ||
+           tagsQuery.isLoading.value ||
+           (searchKeyword.value && searchQuery.isLoading.value)
+  })
+
+  // 计算属性 - 错误状态
+  const error = computed(() => {
+    return templatesQuery.error.value ||
+           diseasesQuery.error.value ||
+           templateTypesQuery.error.value ||
+           tagsQuery.error.value ||
+           searchQuery.error.value
+  })
+
+  // Actions
+
+  /**
+   * 切换分类视图
+   */
+  const switchView = (view: CategoryView) => {
+    currentView.value = view
+    selectedCategory.value = 'all'
+    selectedTemplate.value = null
+  }
+
+  /**
+   * 选择分类
+   */
+  const selectCategory = (categoryId: string) => {
+    selectedCategory.value = categoryId
+    selectedTemplate.value = null
+
+    // 自动选择第一个模板（如果有的话）
+    setTimeout(() => {
+      const filtered = filteredTemplates.value
+      if (filtered.length > 0) {
+        selectedTemplate.value = filtered[0]
+      }
+    }, 0)
+  }
+
+  /**
+   * 选择模板
+   */
+  const selectTemplate = (templateId: TemplateID) => {
+    const template = currentTemplates.value.find(t => t.id === templateId)
+    selectedTemplate.value = template || null
+  }
+
+  /**
+   * 切换收藏状态
+   */
+  const toggleFavorite = async (templateId: TemplateID) => {
+    try {
+      await toggleFavoriteMutation.mutateAsync(templateId)
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error)
+      throw error
+    }
+  }
+
+  /**
+   * 保存模板
+   */
+  const saveTemplate = async (template: Template) => {
+    try {
+      await saveTemplateMutation.mutateAsync(template)
+    } catch (error) {
+      console.error('Failed to save template:', error)
+      throw error
+    }
+  }
+
+  /**
+   * 删除模板
+   */
+  const deleteTemplate = async (templateId: TemplateID) => {
+    try {
+      await deleteTemplateMutation.mutateAsync(templateId)
+      // 如果删除的是当前选中的模板，清除选择
+      if (selectedTemplate.value?.id === templateId) {
+        selectedTemplate.value = null
+      }
+    } catch (error) {
+      console.error('Failed to delete template:', error)
+      throw error
+    }
+  }
+
+  /**
+   * 设置搜索关键词
+   */
+  const setSearchKeyword = (keyword: string) => {
+    searchKeyword.value = keyword
+    // TanStack Query会自动处理响应式更新，无需手动refetch
+  }
+
+  /**
+   * 切换筛选面板
+   */
+  const toggleFilterPanel = () => {
+    isFilterPanelOpen.value = !isFilterPanelOpen.value
+  }
+
+  /**
+   * 关闭筛选面板
+   */
+  const closeFilterPanel = () => {
+    isFilterPanelOpen.value = false
+  }
+
+  /**
+   * 设置筛选选项
+   */
+  const setFilterOptions = (options: Partial<FilterOptions>) => {
+    filterOptions.value = { ...filterOptions.value, ...options }
+  }
+
+  /**
+   * 刷新所有数据
+   */
+  const refreshData = async () => {
+    await Promise.all([
+      templatesQuery.refetch(),
+      diseasesQuery.refetch(),
+      templateTypesQuery.refetch(),
+      tagsQuery.refetch()
+    ])
+  }
+
+  return {
+    // 状态
+    currentView,
+    selectedTemplate,
+    selectedCategory,
+    filterOptions,
+    isFilterPanelOpen,
+    searchKeyword,
+
+    // 查询状态
+    isLoading,
+    error,
+
+    // 计算属性
+    filteredTemplates,
+    currentCategories,
+    currentTemplates,
+
+    // 查询对象（用于访问更详细的状态）
+    templatesQuery,
+    diseasesQuery,
+    templateTypesQuery,
+    tagsQuery,
+    searchQuery,
+
+    // 变更对象
+    toggleFavoriteMutation,
+    saveTemplateMutation,
+    deleteTemplateMutation,
+
+    // 方法
+    switchView,
+    selectCategory,
+    selectTemplate,
+    toggleFavorite,
+    saveTemplate,
+    deleteTemplate,
+    setSearchKeyword,
+    toggleFilterPanel,
+    closeFilterPanel,
+    setFilterOptions,
+    refreshData
+  }
+})
