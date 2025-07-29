@@ -7,14 +7,12 @@
         <input type="text" class="search-input" placeholder="搜索模板..." v-model="searchKeyword" @input="handleSearch" />
       </div>
       <div class="header-actions">
-        <button class="add-template-btn" @click="handleAddTemplate">
-          <i class="fas fa-plus"></i>
-          <span>新增</span>
-        </button>
-        <button class="filter-btn" @click="toggleFilterPanel">
-          <i class="fas fa-filter"></i>
-          <span>筛选</span>
-        </button>
+        <BaseButton icon="fas fa-plus" @click="handleAddTemplate">
+          新建模板
+        </BaseButton>
+        <BaseButton variant="secondary" icon="fas fa-filter" @click="toggleFilterPanel">
+          筛选
+        </BaseButton>
       </div>
 
       <!-- 筛选面板 -->
@@ -111,39 +109,45 @@
 
         <!-- 筛选操作按钮 -->
         <div class="filter-actions">
-          <button class="clear-btn" @click="clearFilters">清除筛选</button>
-          <button class="apply-btn" @click="applyFilters">应用筛选</button>
+          <BaseButton variant="secondary" size="small" @click="clearFilters">
+            清除筛选
+          </BaseButton>
+          <BaseButton size="small" @click="applyFilters">
+            应用筛选
+          </BaseButton>
         </div>
       </div>
 
     </div>
 
     <!-- 模板列表 -->
-    <div class="template-list" @click="handleOutsideClick">
-      <div v-for="template in filteredTemplates" :key="template.id" class="template-card"
-        :class="{ active: selectedTemplate?.id === template.id }" @click="handleTemplateSelect(template.id)">
-        <div class="card-header">
-          <div class="template-title">{{ template.title }}</div>
-          <button class="favorite-btn" :class="{ active: template.isFavorite }"
-            @click.stop="handleToggleFavorite(template.id)">
-            <i class="fas fa-star"></i>
-          </button>
+    <div class="template-list">
+      <BaseCard v-for="template in filteredTemplates" :key="template.id" :active="selectedTemplate?.id === template.id"
+        hoverable clickable @click="handleTemplateSelect(template.id)">
+        <template #header>
+          <div class="card-header">
+            <div class="template-title">{{ template.title }}</div>
+            <button class="favorite-btn" :class="{ active: template.isFavorite }"
+              @click.stop="handleToggleFavorite(template.id)">
+              <i class="fas fa-star"></i>
+            </button>
+          </div>
+        </template>
+        <div class="card-content">
+          描述：默认模版前十个字
         </div>
 
-        <div class="card-tags">
-          <span class="tag type">{{ getTemplateTypeName(template.templateType) }}</span>
-          <span class="tag category">{{ getDiseaseName(template.disease) }}</span>
-          <span v-for="tagId in template.tags.slice(0, 2)" :key="tagId" class="tag">
-            {{ getTagName(tagId) }}
-          </span>
-          <span v-if="template.tags.length > 2" class="tag more">+{{ template.tags.length - 2 }}</span>
-        </div>
+        <!-- <div class="card-content">
+          <TagList :tags="getTemplateTags(template)" :max-display="4" variant="type" />
+        </div> -->
 
-        <div class="card-footer">
-          <span class="update-time">{{ formatTime(template.updatedAt) }}</span>
-          <span class="section-count">{{ template.sections.length }} 个部分</span>
-        </div>
-      </div>
+        <template #footer>
+          <div class="card-footer">
+            <span class="update-time">{{ formatTime(template.updatedAt) }}</span>
+            <span class="section-count">{{ template.sections.length }} 个部分</span>
+          </div>
+        </template>
+      </BaseCard>
 
       <!-- 空状态 -->
       <div v-if="filteredTemplates.length === 0" class="empty-state">
@@ -159,6 +163,9 @@
 import { computed, ref } from 'vue'
 import { useTemplateStore } from '../stores/template'
 import type { TemplateID } from '../types'
+import BaseButton from './common/BaseButton.vue'
+import BaseCard from './common/BaseCard.vue'
+import TagList from './common/TagList.vue'
 
 const templateStore = useTemplateStore()
 
@@ -287,6 +294,35 @@ const getTagName = (tagName: string) => {
 }
 
 /**
+ * 获取模板标签列表（用于TagList组件）
+ */
+const getTemplateTags = (template: any) => {
+  const result = []
+
+  // 添加模板类型标签
+  result.push({
+    name: getTemplateTypeName(template.templateType),
+    variant: 'type'
+  })
+
+  // 添加病种分类标签
+  result.push({
+    name: getDiseaseName(template.disease),
+    variant: 'category'
+  })
+
+  // 添加其他标签
+  template.tags.forEach((tagId: string) => {
+    result.push({
+      name: getTagName(tagId),
+      variant: 'default'
+    })
+  })
+
+  return result
+}
+
+/**
  * 格式化时间
  */
 const formatTime = (timestamp: number) => {
@@ -321,31 +357,31 @@ const formatTime = (timestamp: number) => {
 }
 
 .list-header {
-  padding: 10px 20px;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--border-light);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 15px;
-  height: 40px;
+  gap: 10px;
+  height: 36px;
 }
 
 .search-container {
   display: flex;
   align-items: center;
   background-color: var(--section-bg);
-  border-radius: 8px;
-  padding: 6px 15px;
+  border-radius: 6px;
+  padding: 4px 10px;
   flex: 1;
-  max-width: 240px;
-  height: 32px;
+  max-width: 200px;
+  height: 28px;
   box-sizing: border-box;
 }
 
 .search-container i {
   color: var(--text-secondary);
-  margin-right: 10px;
-  font-size: 14px;
+  margin-right: 6px;
+  font-size: 12px;
 }
 
 .search-input {
@@ -354,8 +390,8 @@ const formatTime = (timestamp: number) => {
   outline: none;
   width: 100%;
   color: var(--text-main);
-  font-size: 14px;
-  height: 32px;
+  font-size: 13px;
+  height: 28px;
   box-sizing: border-box;
 }
 
@@ -367,73 +403,26 @@ const formatTime = (timestamp: number) => {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
 }
 
-.add-template-btn {
-  background-color: var(--doc-primary);
-  border: none;
-  border-radius: 6px;
-  padding: 6px 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 14px;
-  height: 32px;
-  box-sizing: border-box;
-  font-weight: 500;
-}
-
-.add-template-btn:hover {
-  background-color: var(--doc-secondary);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(46, 74, 184, 0.3);
-}
-
-.add-template-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 1px 4px rgba(46, 74, 184, 0.3);
-}
-
-.filter-btn {
-  background-color: var(--section-bg);
-  border: none;
-  border-radius: 6px;
-  padding: 6px 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 14px;
-  height: 32px;
-  box-sizing: border-box;
-}
-
-.filter-btn:hover {
-  background-color: var(--hover-bg);
-  color: var(--doc-primary);
-}
+/* 按钮样式已迁移到BaseButton组件 */
 
 .filter-panel {
   position: absolute;
   top: 100%;
   right: 0;
-  width: 320px;
-  max-height: 500px;
+  width: 280px;
+  max-height: 400px;
   overflow-y: auto;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 16px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 12px;
   z-index: 1000;
-  margin-top: 8px;
+  margin-top: 4px;
   animation: fadeInUp 0.2s ease forwards;
 }
 
@@ -450,11 +439,11 @@ const formatTime = (timestamp: number) => {
 }
 
 .filter-group {
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 .filter-group:last-of-type {
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .filter-title {
@@ -505,74 +494,36 @@ const formatTime = (timestamp: number) => {
   margin-top: 16px;
 }
 
-.clear-btn,
-.apply-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.2s;
-}
-
-.clear-btn {
-  background-color: var(--section-bg);
-  color: var(--text-secondary);
-}
-
-.clear-btn:hover {
-  background-color: var(--hover-bg);
-}
-
-.apply-btn {
-  background-color: var(--doc-primary);
-  color: white;
-}
-
-.apply-btn:hover {
-  background-color: #1c3aa9;
-}
+/* 筛选按钮样式已迁移到BaseButton组件 */
 
 .template-list {
   flex: 1;
   overflow-y: auto;
-  padding: 15px 20px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.template-card {
-  background-color: white;
-  border: 1px solid var(--border-light);
-  border-radius: 10px;
-  padding: 18px;
-  margin-bottom: 15px;
-  cursor: pointer;
-  transition: all 0.2s;
+.template-list>.base-card {
+  flex-shrink: 0;
 }
 
-.template-card:hover {
-  border-color: var(--border-emphasis);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-  transform: translateY(-2px);
-}
-
-.template-card.active {
-  border-color: var(--doc-primary);
-  background-color: var(--section-bg);
-}
+/* 模板卡片样式已迁移到BaseCard组件 */
 
 .card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  /* margin-bottom: 12px; */
 }
 
 .template-title {
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--doc-primary);
   flex: 1;
-  margin-right: 10px;
+  margin-right: 8px;
 }
 
 .favorite-btn {
@@ -593,34 +544,10 @@ const formatTime = (timestamp: number) => {
   color: #ffc107;
 }
 
-.card-tags {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 15px;
-  flex-wrap: wrap;
-}
+/* 标签样式已迁移到TagList组件 */
 
-.tag {
-  background-color: var(--section-bg);
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.tag.type {
-  background-color: #e3f2fd;
-  color: #1565c0;
-}
-
-.tag.category {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-}
-
-.tag.more {
-  background-color: var(--border-light);
-  color: var(--text-secondary);
+.card-content {
+  margin-bottom: 1px;
 }
 
 .card-footer {

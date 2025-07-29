@@ -100,8 +100,8 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
-  font-size: 13px;
+  padding: 0 12px;
+  font-size: 12px;
   color: var(--text-secondary);
   z-index: 1000;
   user-select: none;
@@ -110,8 +110,8 @@ onUnmounted(() => {
 .connection-status {
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-width: 120px;
+  gap: 6px;
+  min-width: 100px;
 }
 
 .status-indicator {

@@ -6,7 +6,7 @@
 
 
         <!-- 主内容区域 -->
-        <div class="main-container" v-if="currentView === 'original'">
+        <div class="main-container">
             <!-- 左侧边栏 -->
             <Sidebar />
 
@@ -18,18 +18,18 @@
         </div>
 
         <!-- TanStack Query 示例页面 -->
-        <div class="tanstack-container" v-else-if="currentView === 'tanstack'">
+        <!-- <div class="tanstack-container" v-else-if="currentView === 'tanstack'">
             <TemplateQueryExample />
-        </div>
+        </div> -->
         <!-- 视图切换按钮 -->
-        <div class="view-switcher">
+        <!-- <div class="view-switcher">
             <button @click="currentView = 'original'" :class="{ active: currentView === 'original' }" class="view-btn">
                 原始界面
             </button>
             <button @click="currentView = 'tanstack'" :class="{ active: currentView === 'tanstack' }" class="view-btn">
                 TanStack Query 示例
             </button>
-        </div>
+        </div> -->
         <!-- 底部状态栏 -->
         <StatusBar />
     </div>
@@ -104,8 +104,8 @@ onMounted(async () => {
     /* 尺寸 */
     --title-bar-height: 40px;
     --status-bar-height: 20px;
-    --sidebar-width: 200px;
-    --middle-list-width: 320px;
+    --sidebar-width: 180px;
+    --middle-list-width: 260px;
 }
 
 * {

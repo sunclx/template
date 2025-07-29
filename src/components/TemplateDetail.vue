@@ -6,59 +6,40 @@
         <div v-if="!isEditing" class="detail-title">{{ selectedTemplate.title }}</div>
         <input v-else v-model="editableTemplate.title" class="detail-title-input" placeholder="请输入模板标题" />
         <div class="title-actions">
-          <button class="title-action-btn" v-if="!isEditing" @click="startEdit" title="编辑模板">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="title-action-btn save-btn" v-if="isEditing" @click="saveEdit" title="保存">
-            <i class="fas fa-save"></i>
-          </button>
-          <button class="title-action-btn cancel-btn" v-if="isEditing" @click="cancelEdit" title="取消">
-            <i class="fas fa-times"></i>
-          </button>
-          <button class="title-action-btn" @click="copyTemplate" title="复制">
-            <i class="fas fa-copy"></i>
-          </button>
-          <button class="title-action-btn favorite-btn" :class="{ active: selectedTemplate.isFavorite }"
-            @click="toggleFavorite" :title="selectedTemplate.isFavorite ? '取消收藏' : '收藏'">
-            <i class="fas fa-star"></i>
-          </button>
+          <BaseButton v-if="!isEditing" variant="secondary" size="small" icon="fas fa-edit" @click="startEdit"
+            title="编辑模板" />
+          <BaseButton v-if="isEditing" size="small" icon="fas fa-save" @click="saveEdit" title="保存" />
+          <BaseButton v-if="isEditing" variant="secondary" size="small" icon="fas fa-times" @click="cancelEdit"
+            title="取消" />
+          <BaseButton variant="secondary" size="small" icon="fas fa-copy" @click="copyTemplate" title="复制" />
+          <BaseButton variant="secondary" size="small" icon="fas fa-star"
+            :class="{ 'favorite-active': selectedTemplate.isFavorite }" @click="toggleFavorite"
+            :title="selectedTemplate.isFavorite ? '取消收藏' : '收藏'" />
         </div>
       </div>
       <div class="detail-tags" v-if="!isEditing">
-        <span class="tag disease-tag">
-          <i class="fas fa-stethoscope"></i>
-          {{ getDiseaseName(selectedTemplate.disease) }}
-        </span>
-        <span class="tag type-tag">
-          <i class="fas fa-file-medical"></i>
-          {{ getTemplateTypeName(selectedTemplate.templateType) }}
-        </span>
-        <span v-for="tagId in selectedTemplate.tags" :key="tagId" class="tag custom-tag"
-          :style="{ backgroundColor: getTagColor(tagId) + '20', color: getTagColor(tagId) }">
-          <i class="fas fa-tag"></i>
-          {{ getTagName(tagId) }}
-        </span>
+        <TagList :tags="getDetailTemplateTags(selectedTemplate)" :show-icon="true" variant="detail" />
       </div>
 
       <!-- 编辑模式下的标签编辑 -->
       <div class="edit-tags" v-if="isEditing">
         <div class="edit-row">
           <label>病种：</label>
-          <input v-model="editableTemplate.disease" class="edit-select" list="diseases-list" placeholder="选择或输入病种" />
-          <datalist id="diseases-list">
-            <option v-for="disease in diseases" :key="disease.name" :value="disease.name">
-              {{ disease.name }}
-            </option>
-          </datalist>
+          <SelectDropdown
+            v-model="editableTemplate.disease"
+            :options="diseaseOptions"
+            placeholder="选择或输入病种"
+            class="edit-select-dropdown"
+          />
         </div>
         <div class="edit-row">
           <label>类型：</label>
-          <input v-model="editableTemplate.templateType" class="edit-select" list="types-list" placeholder="选择或输入类型" />
-          <datalist id="types-list">
-            <option v-for="type in templateTypes" :key="type.name" :value="type.name">
-              {{ type.name }}
-            </option>
-          </datalist>
+          <SelectDropdown
+            v-model="editableTemplate.templateType"
+            :options="typeOptions"
+            placeholder="选择或输入类型"
+            class="edit-select-dropdown"
+          />
         </div>
         <div class="edit-row">
           <label>标签：</label>
@@ -95,9 +76,8 @@
                   <i class="fas fa-file-alt"></i>
                   <span>{{ section.title }}</span>
                 </div>
-                <button class="section-copy-btn" @click="copySectionContent(section.content)" title="复制此部分内容">
-                  <i class="fas fa-copy"></i>
-                </button>
+                <BaseButton variant="secondary" size="small" icon="fas fa-copy"
+                  @click="copySectionContent(section.content)" title="复制此部分内容" />
               </div>
               <div class="section-content">
                 <div class="section-content-text">{{ section.content }}</div>
@@ -113,22 +93,22 @@
                 <i class="fas fa-grip-vertical drag-handle"></i>
                 <i class="fas fa-file-alt"></i>
                 <input v-model="section.title" class="section-title-input" placeholder="输入部分标题" />
-                <button class="remove-section-btn" @click="removeSection(index)" title="删除此部分">
-                  <i class="fas fa-trash"></i>
-                </button>
+                <BaseButton variant="danger" size="small" icon="fas fa-trash" @click="removeSection(index)"
+                  title="删除此部分" />
               </div>
               <div class="section-content">
-                <textarea v-model="section.content" class="section-content-textarea" placeholder="输入部分内容"
-                  rows="6" @input="autoResizeTextarea" ref="textareaRefs"></textarea>
+                <textarea v-model="section.content" class="section-content-textarea" placeholder="输入部分内容" rows="6"
+                  @input="autoResizeTextarea" ref="textareaRefs"></textarea>
               </div>
             </div>
           </VueDraggableNext>
 
           <!-- 添加新部分按钮 -->
-          <button v-if="isEditing" class="add-section-btn" @click="addSection">
-            <i class="fas fa-plus"></i>
-            添加新部分
-          </button>
+          <div v-if="isEditing" class="add-section-container">
+            <BaseButton icon="fas fa-plus" @click="addSection">
+              添加新部分
+            </BaseButton>
+          </div>
         </div>
 
         <!-- 元数据信息 -->
@@ -158,6 +138,9 @@ import { computed, ref, watch, nextTick } from 'vue'
 import { VueDraggableNext } from 'vue-draggable-next'
 import { useTemplateStore } from '../stores/template'
 import type { TemplateSection } from '../types'
+import BaseButton from './common/BaseButton.vue'
+import TagList from './common/TagList.vue'
+import SelectDropdown from './common/SelectDropdown.vue'
 
 const templateStore = useTemplateStore()
 
@@ -171,6 +154,26 @@ const selectedTemplate = computed(() => templateStore.selectedTemplate)
 const diseases = computed(() => templateStore.diseases)
 const templateTypes = computed(() => templateStore.templateTypes)
 const tags = computed(() => templateStore.tags)
+
+/**
+ * 病种选项列表（转换为下拉组件格式）
+ */
+const diseaseOptions = computed(() => 
+  diseases.value.map(disease => ({
+    label: disease.name,
+    value: disease.name
+  }))
+)
+
+/**
+ * 类型选项列表（转换为下拉组件格式）
+ */
+const typeOptions = computed(() => 
+  templateTypes.value.map(type => ({
+    label: type.name,
+    value: type.name
+  }))
+)
 const availableTags = computed(() => templateStore.tags)
 
 // 监听选中模板变化
@@ -189,7 +192,7 @@ const startEdit = async () => {
     isEditing.value = true
     editableTemplate.value = JSON.parse(JSON.stringify(selectedTemplate.value))
     editableSections.value = JSON.parse(JSON.stringify(selectedTemplate.value.sections))
-    
+
     // 等待DOM更新后调整所有textarea的高度
     await nextTick()
     const textareas = document.querySelectorAll('.section-content-textarea')
@@ -317,6 +320,39 @@ const getTagColor = (tagName: string) => {
 }
 
 /**
+ * 获取详情页模板标签列表（用于TagList组件）
+ */
+const getDetailTemplateTags = (template: any) => {
+  const result = []
+
+  // 添加病种标签
+  result.push({
+    name: getDiseaseName(template.disease),
+    variant: 'category',
+    icon: 'fas fa-stethoscope'
+  })
+
+  // 添加模板类型标签
+  result.push({
+    name: getTemplateTypeName(template.templateType),
+    variant: 'type',
+    icon: 'fas fa-file-medical'
+  })
+
+  // 添加其他标签
+  template.tags.forEach((tagId: string) => {
+    result.push({
+      name: getTagName(tagId),
+      variant: 'default',
+      icon: 'fas fa-tag',
+      color: getTagColor(tagId)
+    })
+  })
+
+  return result
+}
+
+/**
  * 自动调整textarea高度
  */
 const autoResizeTextarea = (event: Event) => {
@@ -359,7 +395,7 @@ const formatDateTime = (timestamp: number) => {
 }
 
 .template-detail-header {
-  padding: 18px 20px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border-light);
   background-color: white;
 }
@@ -368,17 +404,17 @@ const formatDateTime = (timestamp: number) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 
 .detail-title {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--doc-primary);
 }
 
 .detail-title-input {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--doc-primary);
   background: transparent;
@@ -424,105 +460,20 @@ const formatDateTime = (timestamp: number) => {
 /* 标题操作按钮样式 */
 .title-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
 }
 
-.title-action-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  border: none;
-  background-color: var(--section-bg);
-  color: var(--text-secondary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  font-size: 14px;
-}
+/* 标题操作按钮样式已迁移到BaseButton组件 */
 
-.title-action-btn:hover {
-  background-color: var(--hover-bg);
-  color: var(--doc-primary);
-}
-
-.title-action-btn.save-btn {
-  color: var(--success);
-}
-
-.title-action-btn.save-btn:hover {
-  background-color: var(--success);
-  color: white;
-}
-
-.title-action-btn.cancel-btn {
-  color: var(--text-secondary);
-}
-
-.title-action-btn.cancel-btn:hover {
-  background-color: var(--text-secondary);
-  color: white;
-}
-
-.title-action-btn.favorite-btn:hover {
-  color: #ffc107;
-}
-
-.title-action-btn.favorite-btn.active {
-  background-color: #ffc107;
-  color: white;
-}
-
-.detail-tags {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-
-.tag {
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-/* 病种标签样式 */
-.tag.disease-tag {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-  border: 1px solid #4caf50;
-}
-
-.tag.disease-tag i {
-  margin-right: 4px;
-}
-
-/* 类型标签样式 */
-.tag.type-tag {
-  background-color: #e3f2fd;
-  color: #1565c0;
-  border: 1px solid #2196f3;
-}
-
-.tag.type-tag i {
-  margin-right: 4px;
-}
-
-/* 自定义标签样式 */
-.tag.custom-tag {
-  border: 1px solid currentColor;
-}
-
-.tag.custom-tag i {
-  margin-right: 4px;
+.favorite-active {
+  background-color: #ffc107 !important;
+  color: white !important;
 }
 
 .detail-actions {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -595,7 +546,7 @@ const formatDateTime = (timestamp: number) => {
 .template-detail-content {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 12px 16px;
 }
 
 .empty-state {
@@ -633,8 +584,8 @@ const formatDateTime = (timestamp: number) => {
 .template-meta {
   background-color: rgba(248, 249, 250, 0.6);
   border-radius: 6px;
-  padding: 8px 12px;
-  margin-top: 30px;
+  padding: 6px 10px;
+  margin-top: 20px;
   font-size: 11px;
   opacity: 0.8;
   border: 1px solid rgba(233, 236, 239, 0.5);
@@ -672,8 +623,8 @@ const formatDateTime = (timestamp: number) => {
 
 /* 编辑模式样式 */
 .edit-tags {
-  margin-bottom: 16px;
-  padding: 12px;
+  margin-bottom: 12px;
+  padding: 8px 10px;
   background: #f8f9fa;
   border-radius: 6px;
   border: 1px solid #e9ecef;
@@ -710,6 +661,11 @@ const formatDateTime = (timestamp: number) => {
   outline: none;
   border-color: #007bff;
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.edit-select-dropdown {
+  min-width: 150px;
+  flex: 1;
 }
 
 .tag-checkboxes {
@@ -788,7 +744,6 @@ const formatDateTime = (timestamp: number) => {
 
 .template-section {
   border-bottom: 1px dashed var(--border-light);
-  padding-bottom: 20px;
 }
 
 .template-section:last-child {
@@ -797,9 +752,8 @@ const formatDateTime = (timestamp: number) => {
 }
 
 .section-title {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 600;
-  margin-bottom: 15px;
   color: var(--doc-primary);
   display: flex;
   align-items: center;
@@ -812,27 +766,7 @@ const formatDateTime = (timestamp: number) => {
   gap: 8px;
 }
 
-.section-copy-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
-  border: none;
-  background-color: var(--section-bg);
-  color: var(--text-secondary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  font-size: 12px;
-  opacity: 0.7;
-}
-
-.section-copy-btn:hover {
-  background-color: var(--hover-bg);
-  color: var(--doc-primary);
-  opacity: 1;
-}
+/* section复制按钮样式已迁移到BaseButton组件 */
 
 .section-title-input {
   flex: 1;
@@ -850,20 +784,7 @@ const formatDateTime = (timestamp: number) => {
   border-color: var(--doc-primary);
 }
 
-.remove-section-btn {
-  background: none;
-  border: none;
-  color: var(--danger);
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: all 0.2s;
-}
-
-.remove-section-btn:hover {
-  background-color: var(--danger);
-  color: white;
-}
+/* 删除section按钮样式已迁移到BaseButton组件 */
 
 .section-content {
   color: var(--text-main);
@@ -877,7 +798,6 @@ const formatDateTime = (timestamp: number) => {
   background-color: #edf2ff;
   padding: 12px 16px;
   border-radius: 6px;
-  border-left: 4px solid var(--doc-primary);
   margin: 8px 0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
@@ -908,25 +828,12 @@ const formatDateTime = (timestamp: number) => {
   border-color: var(--doc-primary);
 }
 
-.add-section-btn {
-  background-color: var(--section-bg);
-  border: 2px dashed var(--border-light);
-  border-radius: 8px;
-  padding: 20px;
-  color: var(--text-secondary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: all 0.2s;
-  font-size: 14px;
-}
+/* 添加section按钮样式已迁移到BaseButton组件 */
 
-.add-section-btn:hover {
-  background-color: var(--hover-bg);
-  border-color: var(--doc-primary);
-  color: var(--doc-primary);
+.add-section-container {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
 }
 
 /* 滚动条样式 */
