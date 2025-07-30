@@ -4,9 +4,12 @@
         <TitleBar />
 
 
-
+        <!-- TanStack Query 示例页面 -->
+        <div class="tanstack-container" v-if="isQueryExample">
+            <TemplateQueryExample />
+        </div>
         <!-- 主内容区域 -->
-        <div class="main-container">
+        <div class="main-container" v-else>
             <!-- 左侧边栏 -->
             <Sidebar />
 
@@ -16,11 +19,6 @@
             <!-- 右侧详情区域 -->
             <TemplateDetail />
         </div>
-
-        <!-- TanStack Query 示例页面 -->
-        <!-- <div class="tanstack-container" v-else-if="currentView === 'tanstack'">
-            <TemplateQueryExample />
-        </div> -->
         <!-- 视图切换按钮 -->
         <!-- <div class="view-switcher">
             <button @click="currentView = 'original'" :class="{ active: currentView === 'original' }" class="view-btn">
@@ -36,24 +34,21 @@
 </template>
 
 <script setup lang="ts">
-import { provide, ref, onMounted } from 'vue'
+import { onMounted, computed } from 'vue'
 import TitleBar from './components/TitleBar.vue'
 import Sidebar from './components/Sidebar.vue'
 import TemplateList from './components/TemplateList.vue'
 import TemplateDetail from './components/TemplateDetail.vue'
 import StatusBar from './components/StatusBar.vue'
 import TemplateQueryExample from './components/TemplateQueryExample.vue'
-import { useTemplateStore } from './stores/template.ts'
-import { initializeDatabase } from './services/database.ts'
 
-// 视图切换状态
-const currentView = ref<'original' | 'tanstack'>('original')
+import { useTemplateStore } from './stores/template.ts'
+import { useInitializeDatabaseMutation } from "./composables/useDatabase";
+
 
 // 初始化状态管理
 const templateStore = useTemplateStore()
-
-// 提供全局状态
-provide('templateStore', templateStore)
+const isQueryExample = computed(() => templateStore.isQueryExample);
 
 /**
  * 组件挂载时初始化数据库和加载数据
@@ -62,9 +57,8 @@ onMounted(async () => {
     try {
         console.log('正在初始化数据库...')
         // todo! 这里应该是初始化数据库
-        // await initializeDatabase()
-        console.log('数据库初始化成功')
-
+        const { mutate: initializeDatabase } = useInitializeDatabaseMutation();
+        initializeDatabase();
         // 加载数据
         await templateStore.loadDataFromDatabase()
         console.log('数据加载完成')

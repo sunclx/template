@@ -1,4 +1,4 @@
-import { pinyin } from 'pinyin-pro'
+import { pinyin, match } from 'pinyin-pro'
 
 /**
  * 获取中文字符串的拼音首字母
@@ -63,16 +63,22 @@ export function matchText(text: string, keyword: string): boolean {
   }
 
   // 2. 匹配拼音首字母
-  const initials = getPinyinInitials(text)
-  if (initials.includes(lowerKeyword)) {
+  if (match(lowerText, lowerKeyword, { continuous: true })) {
     return true
   }
 
-  // 3. 匹配完整拼音
-  const fullPinyin = getFullPinyin(text)
-  if (fullPinyin.includes(lowerKeyword)) {
-    return true
-  }
+
+  // // 2. 匹配拼音首字母
+  // const initials = getPinyinInitials(text)
+  // if (initials.includes(lowerKeyword)) {
+  //   return true
+  // }
+
+  // // 3. 匹配完整拼音
+  // const fullPinyin = getFullPinyin(text)
+  // if (fullPinyin.includes(lowerKeyword)) {
+  //   return true
+  // }
 
   return false
 }

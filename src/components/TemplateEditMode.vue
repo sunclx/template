@@ -118,7 +118,7 @@ const selectedTemplate = templateStore.selectedTemplate
 
 // 响应式数据
 const template = ref(selectedTemplate ? structuredClone(toRaw(selectedTemplate)) : defaultTemplateValue())
-const isEditing = toRef(templateStore, 'isEditMode')
+
 
 // 计算属性
 const availableTags = computed(() => templateStore.tags)
@@ -216,7 +216,7 @@ const handleSave = () => {
  */
 const handleCancel = () => {
   if (template.value) {
-    isEditing.value = false
+    templateStore.setEditMode(false)
   }
 }
 

@@ -27,6 +27,9 @@
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import BaseButton from './common/BaseButton.vue'
 import MenuDropdown from './common/MenuDropdown.vue'
+import { useTemplateStore } from '@/stores/template'
+
+const templateStore = useTemplateStore();
 
 // 菜单数据定义
 const fileMenuItems = [
@@ -54,6 +57,7 @@ const editMenuItems = [
 ]
 
 const viewMenuItems = [
+  { key: 'queryExample', label: 'TanStack Query 示例', icon: 'fas fa-sync-alt' },
   { key: 'refresh', label: '刷新', icon: 'fas fa-sync-alt', shortcut: 'F5' },
   { key: 'divider1', label: '', divider: true },
   { key: 'sidebar', label: '侧边栏', icon: 'fas fa-bars' },
@@ -78,6 +82,9 @@ const helpMenuItems = [
 const handleMenuItemClick = (item: any) => {
   console.log(`点击菜单项: ${item.key} - ${item.label}`)
   // TODO: 实现具体菜单功能
+  if (item.key === 'queryExample') {
+    templateStore.toggleQueryExample()
+  }
 }
 
 /**

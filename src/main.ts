@@ -2,7 +2,7 @@ import { createApp } from "vue";
 import { createPinia } from "pinia";
 import { VueQueryPlugin, QueryClient } from '@tanstack/vue-query';
 import App from "./App.vue";
-import { useInitializeDatabaseMutation } from "./composables/useDatabase";
+
 
 // 创建Vue应用实例
 const app = createApp(App);
@@ -34,6 +34,4 @@ app.use(VueQueryPlugin, {
 // 挂载应用
 app.mount("#app");
 
-// 启动应用时不再使用TanStack Query钩子
-// 数据库初始化将在组件中按需进行
-console.log('应用启动完成，数据库将在需要时初始化');
+// useInitializeDatabaseMutation();

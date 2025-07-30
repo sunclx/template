@@ -94,7 +94,7 @@ export function useTagsQuery() {
  */
 export function useSaveTemplateMutation() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (template: Template) => DatabaseService.saveTemplate(template),
     onSuccess: () => {
@@ -111,7 +111,7 @@ export function useSaveTemplateMutation() {
  */
 export function useDeleteTemplateMutation() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (id: string) => DatabaseService.deleteTemplate(id),
     onSuccess: (_, deletedId) => {
@@ -129,7 +129,7 @@ export function useDeleteTemplateMutation() {
  */
 export function useToggleFavoriteMutation() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (id: string) => DatabaseService.toggleTemplateFavorite(id),
     onSuccess: (_, templateId) => {
@@ -145,7 +145,7 @@ export function useToggleFavoriteMutation() {
  */
 export function useSaveDiseaseMutation() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (disease: Disease) => DatabaseService.saveDisease(disease),
     onSuccess: () => {
@@ -159,7 +159,7 @@ export function useSaveDiseaseMutation() {
  */
 export function useSaveTemplateTypeMutation() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (templateType: TemplateTypeInfo) => DatabaseService.saveTemplateType(templateType),
     onSuccess: () => {
@@ -173,7 +173,7 @@ export function useSaveTemplateTypeMutation() {
  */
 export function useSaveTagMutation() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (tag: Tag) => DatabaseService.saveTag(tag),
     onSuccess: () => {
@@ -187,18 +187,18 @@ export function useSaveTagMutation() {
  */
 export function useInitializeDatabaseMutation() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: async () => {
       await DatabaseService.initDatabase()
-      
       // 检查是否需要初始化示例数据
       const templates = await DatabaseService.getAllTemplates()
       if (templates.length === 0) {
         await DatabaseService.initSampleData()
+        console.log('数据库样本数据初始化成功')
       }
-      
-      return 'Database initialized successfully'
+      console.log('数据库初始化成功')
+      return '数据库初始化成功'
     },
     onSuccess: () => {
       // 初始化完成后，清除所有缓存并重新获取数据

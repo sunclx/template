@@ -4,13 +4,11 @@ import { matchText } from '../utils/pinyin'
 import { DatabaseService } from '../services/database'
 import type {
     Template,
-    TemplateTypeInfo,
-    DiseaseInfo,
-    Tag,
     FilterOptions,
     CategoryView,
     TemplateID
 } from '../types'
+import { set } from '@vueuse/core'
 
 /**
  * 模板管理状态store
@@ -18,9 +16,21 @@ import type {
 export const useTemplateStore = defineStore('template', () => {
     // 状态数据
     const templates = ref<Template[]>([])
-    // const diseases = ref<DiseaseInfo[]>([])
-    // const templateTypes = ref<TemplateTypeInfo[]>([])
-    // const tags = ref<Tag[]>([])
+
+
+    // 当前视图状态
+    const currentView = ref<CategoryView>('disease')
+    const selectedTemplate = ref<Template | null>(null)
+    const selectedCategory = ref<string>('all')
+    const filterOptions = ref<FilterOptions>({})
+    const isFilterPanelOpen = ref(false)
+    const searchKeyword = ref('')
+    const isQueryExample = ref(false);
+
+    // 编辑模式
+    const isEditMode = ref(false)
+
+    // 计算属性 - 过滤后的模板列表
     const diseases = computed(() => {
         const diseaseMap = new Map<string, number>()
         templates.value.forEach(template => {
@@ -56,18 +66,6 @@ export const useTemplateStore = defineStore('template', () => {
             color: '#007bff' // todo! 随机生成颜色
         }))
     })
-
-    // 当前视图状态
-    const currentView = ref<CategoryView>('disease')
-    const selectedTemplate = ref<Template | null>(null)
-    const selectedCategory = ref<string>('all')
-    const filterOptions = ref<FilterOptions>({})
-    const isFilterPanelOpen = ref(false)
-    const searchKeyword = ref('')
-
-    // 编辑模式
-    const isEditMode = ref(false)
-
     // 计算属性 - 过滤后的模板列表
     const filteredTemplates = computed(() => {
         let result = templates.value
@@ -111,21 +109,21 @@ export const useTemplateStore = defineStore('template', () => {
 
         // 按病种筛选（多选）
         if (filterOptions.value.disease && filterOptions.value.disease.length > 0) {
-            result = result.filter(template => 
+            result = result.filter(template =>
                 filterOptions.value.disease!.includes(template.disease)
             )
         }
 
         // 按模板类型筛选（多选）
         if (filterOptions.value.templateType && filterOptions.value.templateType.length > 0) {
-            result = result.filter(template => 
+            result = result.filter(template =>
                 filterOptions.value.templateType!.includes(template.templateType)
             )
         }
 
         // 按标签筛选（多选）
         if (filterOptions.value.tags && filterOptions.value.tags.length > 0) {
-            result = result.filter(template => 
+            result = result.filter(template =>
                 filterOptions.value.tags!.some(tag => template.tags.includes(tag))
             )
         }
@@ -260,6 +258,7 @@ export const useTemplateStore = defineStore('template', () => {
     const createTemplate = async (templateData: Partial<Template>) => {
         try {
             // 创建新模板的完整数据
+            // todo!
             const newTemplate: Template = {
                 id: `template_${Date.now()}`,
                 title: templateData.title || '新建模板',
@@ -333,6 +332,16 @@ export const useTemplateStore = defineStore('template', () => {
         filterOptions.value = { ...filterOptions.value, ...options }
     }
 
+
+    /**
+     * 设置编辑模式
+     */
+    const setEditMode = (isEdit: boolean) => {
+        isEditMode.value = isEdit
+    }
+    const toggleQueryExample = () => {
+        isQueryExample.value = !isQueryExample.value;
+    }
     return {
         // 状态
         templates,
@@ -346,6 +355,7 @@ export const useTemplateStore = defineStore('template', () => {
         isFilterPanelOpen,
         searchKeyword,
         isEditMode,
+        isQueryExample,
 
         // 计算属性
         filteredTemplates,
@@ -362,6 +372,8 @@ export const useTemplateStore = defineStore('template', () => {
         setSearchKeyword,
         toggleFilterPanel,
         closeFilterPanel,
-        setFilterOptions
+        setFilterOptions,
+        setEditMode,
+        toggleQueryExample
     }
 })

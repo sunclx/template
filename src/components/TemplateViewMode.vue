@@ -68,19 +68,16 @@ import type { Template } from '../types'
 const templateStore = useTemplateStore()
 const template = toRef(templateStore, "selectedTemplate") as Ref<Template>
 
-
-
 // 计算属性
 const diseases = computed(() => templateStore.diseases)
 const templateTypes = computed(() => templateStore.templateTypes)
 const tags = computed(() => templateStore.tags)
-const isEditing = toRef(templateStore, 'isEditMode')
 
 /**
  * 开始编辑
  */
 const handleEdit = () => {
-  isEditing.value = true
+  templateStore.setEditMode(true)
 }
 
 /**

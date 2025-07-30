@@ -13,9 +13,6 @@ import {
 } from '../composables/useDatabase'
 import type {
   Template,
-  Disease,
-  TemplateTypeInfo,
-  Tag,
   FilterOptions,
   CategoryView,
   TemplateID
@@ -38,10 +35,10 @@ export const useTemplateQueryStore = defineStore('templateQuery', () => {
   const diseasesQuery = useDiseasesQuery()
   const templateTypesQuery = useTemplateTypesQuery()
   const tagsQuery = useTagsQuery()
-  
+
   // 搜索查询（仅在有搜索关键词时启用）
   const searchQuery = useSearchTemplatesQuery(searchKeyword)
-  
+
   // 变更钩子
   const toggleFavoriteMutation = useToggleFavoriteMutation()
   const saveTemplateMutation = useSaveTemplateMutation()
@@ -118,19 +115,19 @@ export const useTemplateQueryStore = defineStore('templateQuery', () => {
   // 计算属性 - 加载状态
   const isLoading = computed(() => {
     return templatesQuery.isLoading.value ||
-           diseasesQuery.isLoading.value ||
-           templateTypesQuery.isLoading.value ||
-           tagsQuery.isLoading.value ||
-           (searchKeyword.value && searchQuery.isLoading.value)
+      diseasesQuery.isLoading.value ||
+      templateTypesQuery.isLoading.value ||
+      tagsQuery.isLoading.value ||
+      (searchKeyword.value && searchQuery.isLoading.value)
   })
 
   // 计算属性 - 错误状态
   const error = computed(() => {
     return templatesQuery.error.value ||
-           diseasesQuery.error.value ||
-           templateTypesQuery.error.value ||
-           tagsQuery.error.value ||
-           searchQuery.error.value
+      diseasesQuery.error.value ||
+      templateTypesQuery.error.value ||
+      tagsQuery.error.value ||
+      searchQuery.error.value
   })
 
   // Actions

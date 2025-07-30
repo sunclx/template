@@ -36,7 +36,7 @@
           </div>
         </template>
         <div class="card-content">
-          描述：默认模版前十个字
+          <span v-html="highlightKeyword(getTemplatePreview(template), templateStore.searchKeyword)"></span>
         </div>
 
         <!-- <div class="card-content">
@@ -64,10 +64,12 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useTemplateStore } from '../stores/template'
-import type { TemplateID } from '../types'
+import type { TemplateID, Template } from '../types'
+import { getPinyinInitials, getFullPinyin } from '../utils/pinyin'
 import BaseButton from './common/BaseButton.vue'
 import BaseCard from './common/BaseCard.vue'
 import FilterPanel from './FilterPanel.vue'
+import { match } from 'pinyin-pro'
 
 const templateStore = useTemplateStore()
 
@@ -82,6 +84,153 @@ const filterOptions = computed(() => templateStore.filterOptions)
 const diseases = computed(() => templateStore.diseases)
 const templateTypes = computed(() => templateStore.templateTypes)
 const tags = computed(() => templateStore.tags)
+
+/**
+ * 查找匹配位置（支持中文、拼音首字母、完整拼音匹配）
+ */
+const findMatchIndex = (text: string, keyword: string): number => {
+  const lowerText = text.toLowerCase()
+  const lowerKeyword = keyword.toLowerCase()
+
+  // 1. 直接匹配中文或英文
+  const directMatch = lowerText.indexOf(lowerKeyword)
+  if (directMatch !== -1) {
+    return directMatch
+  }
+
+  // 2. 拼音首字母匹配
+  const textInitials = getPinyinInitials(text)
+  const keywordIndex = textInitials.indexOf(lowerKeyword)
+  if (keywordIndex !== -1) {
+    // 需要找到对应的中文字符位置
+    return findChineseCharPosition(text, keywordIndex, keyword.length)
+  }
+
+  // 3. 完整拼音匹配
+  const fullPinyin = getFullPinyin(text)
+  const pinyinIndex = fullPinyin.indexOf(lowerKeyword)
+  if (pinyinIndex !== -1) {
+    // 需要找到对应的中文字符位置
+    return findChineseCharPositionByPinyin(text, lowerKeyword)
+  }
+
+  return -1
+}
+
+/**
+ * 根据拼音首字母位置找到对应的中文字符位置
+ */
+const findChineseCharPosition = (text: string, pinyinIndex: number, keywordLength: number): number => {
+  // 简化处理：假设每个中文字符对应一个拼音首字母
+  return Math.min(pinyinIndex, text.length - 1)
+}
+
+/**
+ * 根据完整拼音匹配找到对应的中文字符位置
+ */
+const findChineseCharPositionByPinyin = (text: string, keyword: string): number => {
+  // 遍历文本，找到拼音匹配的起始位置
+  for (let i = 0; i < text.length; i++) {
+    const substring = text.substring(i)
+    const substringPinyin = getFullPinyin(substring).toLowerCase()
+    if (substringPinyin.startsWith(keyword)) {
+      return i
+    }
+  }
+  return -1
+}
+
+/**
+ * 获取模板内容预览（搜索时显示匹配字符周围的十个字，否则显示前十个字）
+ */
+const getTemplatePreview = (template: Template) => {
+  // 合并所有章节内容
+  const allContent = template.title + template.sections.map(section => section.title + section.content).join('')
+  // 移除HTML标签和多余空白字符
+  const cleanContent = allContent.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
+
+  const searchKeyword = templateStore.searchKeyword.trim()
+
+  // 如果没有搜索关键词，返回前十个字
+  if (!searchKeyword) {
+    return cleanContent.length > 10 ? cleanContent.substring(0, 10) + '...' : cleanContent
+  }
+
+  // 查找匹配位置
+  const matchIndex = findMatchIndex(cleanContent, searchKeyword)
+
+  if (matchIndex === -1) {
+    // 如果没有找到匹配，返回前十个字
+    return cleanContent.length > 10 ? cleanContent.substring(0, 10) + '...' : cleanContent
+  }
+
+  // 计算显示范围（匹配字符周围的十个字）
+  const start = Math.max(0, matchIndex - 5)
+  const end = Math.min(cleanContent.length, matchIndex + searchKeyword.length + 5)
+
+  let preview = cleanContent.substring(start, end)
+
+  // 添加省略号
+  if (start > 0) preview = '...' + preview
+  if (end < cleanContent.length) preview = preview + '...'
+
+  return preview
+}
+
+/**
+ * 高亮显示搜索关键词（支持拼音匹配）
+ */
+const highlightKeyword = (text: string, keyword: string) => {
+  if (!keyword || !text) return text
+
+  const lowerText = text.toLowerCase()
+  const lowerKeyword = keyword.toLowerCase()
+
+  // 1. 直接匹配中文或英文
+  const directMatch = lowerText.indexOf(lowerKeyword)
+  if (directMatch !== -1) {
+    const regex = new RegExp(`(${keyword})`, 'gi')
+    return text.replace(regex, '<mark class="highlight">$1</mark>')
+  }
+
+  // // 2. 拼音首字母匹配 - 高亮对应的中文字符
+  // const textInitials = getPinyinInitials(text)
+  // const keywordIndex = textInitials.indexOf(lowerKeyword)
+  // if (keywordIndex !== -1) {
+  //   const charIndex = findChineseCharPosition(text, keywordIndex, keyword.length)
+  //   const matchLength = Math.min(keyword.length, text.length - charIndex)
+  //   const beforeMatch = text.substring(0, charIndex)
+  //   const matchText = text.substring(charIndex, charIndex + matchLength)
+  //   const afterMatch = text.substring(charIndex + matchLength)
+  //   return beforeMatch + '<mark class="highlight">' + matchText + '</mark>' + afterMatch
+  // }
+
+  // // 3. 完整拼音匹配 - 高亮对应的中文字符
+  // const fullPinyin = getFullPinyin(text)
+  // const pinyinIndex = fullPinyin.indexOf(lowerKeyword)
+  // if (pinyinIndex !== -1) {
+  //   const charIndex = findChineseCharPositionByPinyin(text, lowerKeyword)
+  //   if (charIndex !== -1) {
+  //     // 估算匹配的字符长度
+  //     const matchLength = estimateMatchLength(text.substring(charIndex), lowerKeyword)
+  //     const beforeMatch = text.substring(0, charIndex)
+  //     const matchText = text.substring(charIndex, charIndex + matchLength)
+  //     const afterMatch = text.substring(charIndex + matchLength)
+  //     return beforeMatch + '<mark class="highlight">' + matchText + '</mark>' + afterMatch
+  //   }
+  // }
+  const matchResult = match(lowerText, lowerKeyword, { continuous: true });
+  if (matchResult) {
+    const beforeMatch = text.substring(0, matchResult[0])
+    const matchText = text.substring(matchResult[0], matchResult[matchResult.length - 1] + 1)
+    const afterMatch = text.substring(matchResult[matchResult.length - 1] + 1)
+    return beforeMatch + '<mark class="highlight">' + matchText + '</mark>' + afterMatch
+  }
+
+
+  return text
+}
+
 
 /**
  * 处理搜索
@@ -163,7 +312,7 @@ const applyFilters = () => {
  */
 const handleAddTemplate = async () => {
   try {
-    templateStore.isEditMode = true
+    templateStore.setEditMode(true)
     templateStore.selectedTemplate = null
     // console.log('新模板创建成功:', newTemplate)
   } catch (error) {
@@ -340,6 +489,17 @@ const formatTime = (timestamp: number) => {
 
 .card-content {
   margin-bottom: 1px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.card-content .highlight {
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 1px 2px;
+  border-radius: 2px;
+  font-weight: 500;
 }
 
 .card-footer {

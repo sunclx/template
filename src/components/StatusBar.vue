@@ -1,10 +1,14 @@
 <template>
   <div class="status-bar">
     <div class="connection-status">
-      <div class="status-indicator" :class="{ connected: isConnected }"></div>
+      <div class="status-indicator" :class="{
+        connected: isConnected,
+        loading: initializeDatabase.isPending.value,
+        error: initializeDatabase.isError.value
+      }"></div>
       <span>{{ connectionText }}</span>
     </div>
-    
+
     <div class="template-info">
       <span v-if="selectedTemplate">
         已选择: {{ selectedTemplate.title }}
@@ -16,7 +20,7 @@
         共 {{ totalCount }} 个模板
       </span>
     </div>
-    
+
     <div class="system-info">
       <span>{{ currentTime }}</span>
       <span class="separator">|</span>
@@ -28,11 +32,12 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useTemplateStore } from '../stores/template'
+import { useInitializeDatabaseMutation } from '../composables/useDatabase'
 
 const templateStore = useTemplateStore()
+const initializeDatabase = useInitializeDatabaseMutation()
 
 // 响应式数据
-const isConnected = ref(true)
 const currentTime = ref('')
 let timeInterval: number | null = null
 
@@ -41,8 +46,25 @@ const selectedTemplate = computed(() => templateStore.selectedTemplate)
 const filteredCount = computed(() => templateStore.filteredTemplates.length)
 const totalCount = computed(() => templateStore.templates.length)
 
+/**
+ * 数据库连接状态
+ */
+const isConnected = computed(() => {
+  // 基于查询状态判断连接状态
+  return !initializeDatabase.isError.value && !initializeDatabase.isPending.value
+})
+
+/**
+ * 连接状态文本
+ */
 const connectionText = computed(() => {
-  return isConnected.value ? '数据库已连接' : '数据库连接断开'
+  if (initializeDatabase.isPending.value) {
+    return '正在连接数据库...'
+  }
+  if (initializeDatabase.isError.value) {
+    return '数据库连接失败'
+  }
+  return '数据库已连接'
 })
 
 /**
@@ -61,24 +83,26 @@ const updateTime = () => {
 }
 
 /**
- * 模拟连接状态检查
+ * 检查数据库连接状态
  */
 const checkConnection = () => {
-  // 这里可以实现真实的连接状态检查
-  // 目前模拟为始终连接
-  isConnected.value = true
+  // 连接状态现在通过initializeDatabase自动管理
+  // 如果需要手动刷新，可以调用
+  // initializeDatabase.mutate()
+  if (initializeDatabase.isError.value) {
+    console.warn('数据库连接检查失败:', initializeDatabase.error.value)
+  }
 }
 
 // 生命周期钩子
 onMounted(() => {
   updateTime()
-  checkConnection()
-  
-  // 每秒更新时间
+
+  // 每秒更新时间和检查连接状态
   timeInterval = window.setInterval(() => {
     updateTime()
     checkConnection()
-  }, 1000)
+  }, 5000)
 })
 
 onUnmounted(() => {
@@ -126,6 +150,41 @@ onUnmounted(() => {
   background-color: var(--success);
 }
 
+.status-indicator.loading {
+  background-color: var(--warning);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.status-indicator.error {
+  background-color: var(--danger);
+  animation: blink 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes blink {
+
+  0%,
+  50% {
+    opacity: 1;
+  }
+
+  51%,
+  100% {
+    opacity: 0.3;
+  }
+}
+
 .template-info {
   display: flex;
   gap: 20px;
@@ -155,7 +214,7 @@ onUnmounted(() => {
   .template-info {
     gap: 15px;
   }
-  
+
   .system-info {
     min-width: 150px;
   }
@@ -166,11 +225,11 @@ onUnmounted(() => {
     padding: 0 15px;
     font-size: 12px;
   }
-  
+
   .template-info {
     gap: 10px;
   }
-  
+
   .template-info span:nth-child(2) {
     display: none;
   }

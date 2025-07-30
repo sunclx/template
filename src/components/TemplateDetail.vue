@@ -29,7 +29,7 @@ const selectedTemplate = toRef(templateStore, 'selectedTemplate')
 // 监听选中模板变化
 watch(selectedTemplate, (newTemplate) => {
   if (newTemplate) {
-    isEditing.value = false
+    templateStore.setEditMode(false)
   }
 }, { immediate: true })
 

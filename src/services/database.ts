@@ -22,12 +22,10 @@ export class DatabaseService {
    */
   static async getAllTemplates(): Promise<Template[]> {
     try {
-      // return await invoke<Template[]>('get_all_templates')
-
-      return get_all_templates_sample()
+      return await invoke<Template[]>('get_all_templates')
     } catch (error) {
       console.error('Failed to get all templates:', error)
-      throw error
+      return get_all_templates_sample()
     }
   }
 
