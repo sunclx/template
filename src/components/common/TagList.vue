@@ -4,7 +4,7 @@
       'tag',
       `tag--${getTagType(tag.name, index)}`
     ]" :style="getTagStyle(tag.name)">
-      <i v-if="showIcon" class="fas fa-tag tag__icon"></i>
+      <i v-if="showIcon" :class="getTagIcon(tag.name)" class="tag__icon"></i>
       {{ tag.name }}
     </span>
     <span v-if="hasMoreTags" class="tag tag--more" :title="moreTagsTooltip">
@@ -18,6 +18,8 @@ import { computed } from 'vue'
 interface Tag {
   name: string
   type: 'default' | 'type' | 'category'
+  icon?: string
+  color?: string
 }
 
 interface Props {
@@ -65,23 +67,69 @@ const moreTagsTooltip = computed(() => {
 
 /**
  * 获取标签类型
+ * @param tagName - 标签名称
+ * @param index - 标签索引
+ * @returns 标签类型字符串
  */
-const getTagType = (tag: string, index: number): string => {
-  if (props.variant === 'type' && index === 0) return 'type'
-  if (props.variant === 'category' && index === 0) return 'category'
+const getTagType = (tagName: string, index: number): string => {
+  // 首先查找对应的标签对象
+  const tagObj = props.tags.find(tag => tag.name === tagName)
+
+  // 如果找到标签对象且有明确的type属性，使用该type
+  if (tagObj && tagObj.type && tagObj.type !== 'default') {
+    return tagObj.type
+  }
+
+  // 如果没有明确的type，根据variant和索引位置判断
+  if (props.variant === 'type' && index === 0) {
+    return 'type'
+  }
+
+  if (props.variant === 'category' && index === 0) {
+    return 'category'
+  }
+
+  // 默认返回default类型
   return 'default'
 }
 
 /**
- * 获取标签样式
+ * 获取标签图标类名
+ * @param tagName - 标签名称
+ * @returns 图标类名字符串
  */
-const getTagStyle = (tag: string) => {
-  if (props.colorMap && props.colorMap[tag]) {
-    return {
-      color: props.colorMap[tag]
-    }
+const getTagIcon = (tagName: string): string => {
+  // 首先查找对应的标签对象
+  const tagObj = props.tags.find(tag => tag.name === tagName)
+  
+  // 如果标签对象有自定义图标，使用自定义图标
+  if (tagObj && tagObj.icon) {
+    return tagObj.icon
   }
-  return {}
+  
+  // 默认使用fa-tag图标
+  return 'fas fa-tag'
+}
+
+/**
+ * 获取标签样式
+ * @param tagName - 标签名称
+ * @returns 样式对象
+ */
+const getTagStyle = (tagName: string) => {
+  const tagObj = props.tags.find(tag => tag.name === tagName)
+  const style: Record<string, string> = {}
+  
+  // 优先使用标签对象的color属性
+  if (tagObj && tagObj.color) {
+    style.color = tagObj.color
+  }
+  // 其次使用colorMap中的颜色
+  else if (props.colorMap && props.colorMap[tagName]) {
+    style.color = props.colorMap[tagName]
+  }
+  
+  return style
 }
 </script>
 

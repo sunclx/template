@@ -13,7 +13,7 @@
         </div>
       </div>
       <div class="detail-tags">
-        <TagList :tags="getDetailTemplateTags(template)" :show-icon="true" variant="detail" />
+        <TagList :tags="getDetailTemplateTags(template)" :show-icon="true" />
       </div>
     </div>
 
@@ -59,62 +59,74 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, toRef, Ref } from 'vue'
 import { useTemplateStore } from '../stores/template'
 import BaseButton from './common/BaseButton.vue'
 import TagList from './common/TagList.vue'
-
-// Props
-interface Props {
-  template: any
-}
-
-const props = defineProps<Props>()
-
-// Emits
-interface Emits {
-  edit: []
-  copy: []
-  toggleFavorite: []
-  copySectionContent: [content: string]
-}
-
-const emit = defineEmits<Emits>()
+import type { Template } from '../types'
 
 const templateStore = useTemplateStore()
+const template = toRef(templateStore, "selectedTemplate") as Ref<Template>
+
+
 
 // 计算属性
 const diseases = computed(() => templateStore.diseases)
 const templateTypes = computed(() => templateStore.templateTypes)
 const tags = computed(() => templateStore.tags)
+const isEditing = toRef(templateStore, 'isEditMode')
 
 /**
  * 开始编辑
  */
 const handleEdit = () => {
-  emit('edit')
+  isEditing.value = true
 }
 
 /**
  * 复制模板
  */
-const handleCopy = () => {
-  emit('copy')
+const handleCopy = async () => {
+  if (template.value) {
+    try {
+      const templateText = template.value.sections
+        .map(section => `${section.title}：${section.content}`)
+        .join('\n')
+
+      await navigator.clipboard.writeText(templateText)
+      console.log('模板已复制到剪贴板')
+      // TODO: 显示成功提示
+    } catch (error) {
+      console.error('复制失败:', error)
+      // TODO: 显示错误提示
+    }
+  }
 }
 
 /**
  * 切换收藏状态
  */
 const handleToggleFavorite = () => {
-  emit('toggleFavorite')
+  if (template) {
+    template.value.isFavorite = !template.value.isFavorite
+    templateStore.toggleFavorite(template.value.id)
+  }
 }
 
 /**
  * 复制区块内容
  */
-const copySectionContent = (content: string) => {
-  emit('copySectionContent', content)
+const copySectionContent = async (content: string) => {
+  try {
+    await navigator.clipboard.writeText(content)
+    console.log('区块内容已复制到剪贴板')
+    // TODO: 显示成功提示
+  } catch (error) {
+    console.error('复制失败:', error)
+    // TODO: 显示错误提示
+  }
 }
+
 
 /**
  * 获取病种名称
@@ -151,20 +163,26 @@ const getTagColor = (tagName: string) => {
 /**
  * 获取详情页模板标签列表（用于TagList组件）
  */
-const getDetailTemplateTags = (template: any) => {
-  const result = []
+const getDetailTemplateTags = (template: Template) => {
+  interface Tag {
+    name: string
+    type: 'default' | 'type' | 'category'
+    icon?: string,
+    color?: string
+  }
+  const result: Tag[] = []
 
   // 添加病种标签
   result.push({
     name: getDiseaseName(template.disease),
-    variant: 'category',
+    type: 'category',
     icon: 'fas fa-stethoscope'
   })
 
   // 添加模板类型标签
   result.push({
     name: getTemplateTypeName(template.templateType),
-    variant: 'type',
+    type: 'type',
     icon: 'fas fa-file-medical'
   })
 
@@ -172,7 +190,7 @@ const getDetailTemplateTags = (template: any) => {
   template.tags.forEach((tagId: string) => {
     result.push({
       name: getTagName(tagId),
-      variant: 'default',
+      type: 'default',
       icon: 'fas fa-tag',
       color: getTagColor(tagId)
     })
@@ -242,9 +260,9 @@ const formatDateTime = (timestamp: number) => {
   padding: 12px 16px;
 }
 
-.detail-content {
+/* .detail-content {
   max-width: 800px;
-}
+} */
 
 .template-meta {
   background-color: rgba(248, 249, 250, 0.6);

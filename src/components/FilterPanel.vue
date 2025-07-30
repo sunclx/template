@@ -1,5 +1,15 @@
 <template>
   <div class="filter-panel" v-if="isOpen" @click.stop>
+    <!-- 筛选操作按钮 -->
+    <div class="filter-actions">
+      <BaseButton variant="secondary" size="small" @click="clearFilters">
+        清除筛选
+      </BaseButton>
+      <BaseButton size="small" @click="applyFilters">
+        应用筛选
+      </BaseButton>
+    </div>
+
     <!-- 收藏状态筛选 -->
     <div class="filter-group">
       <div class="filter-title">收藏状态</div>
@@ -23,12 +33,13 @@
     <div class="filter-group">
       <div class="filter-title">病种分类</div>
       <div class="filter-options">
-        <div class="filter-option" :class="{ active: filterOptions.disease === undefined }"
-          @click="setFilter('disease', undefined)">
+        <div class="filter-option" :class="{ active: !filterOptions.disease || filterOptions.disease.length === 0 }"
+          @click="setFilter('disease', [])">
           全部病种
         </div>
         <div v-for="disease in diseases" :key="disease.name" class="filter-option"
-          :class="{ active: filterOptions.disease === disease.name }" @click="setFilter('disease', disease.name)">
+          :class="{ active: filterOptions.disease && filterOptions.disease.includes(disease.name) }" 
+          @click="toggleDiseaseFilter(disease.name)">
           {{ disease.name }}
         </div>
       </div>
@@ -38,13 +49,13 @@
     <div class="filter-group">
       <div class="filter-title">模板类型</div>
       <div class="filter-options">
-        <div class="filter-option" :class="{ active: filterOptions.templateType === undefined }"
-          @click="setFilter('templateType', undefined)">
+        <div class="filter-option" :class="{ active: !filterOptions.templateType || filterOptions.templateType.length === 0 }"
+          @click="setFilter('templateType', [])">
           全部类型
         </div>
         <div v-for="type in templateTypes" :key="type.name" class="filter-option"
-          :class="{ active: filterOptions.templateType === type.name }"
-          @click="setFilter('templateType', type.name)">
+          :class="{ active: filterOptions.templateType && filterOptions.templateType.includes(type.name) }"
+          @click="toggleTemplateTypeFilter(type.name)">
           {{ type.name }}
         </div>
       </div>
@@ -90,15 +101,6 @@
       </div>
     </div>
 
-    <!-- 筛选操作按钮 -->
-    <div class="filter-actions">
-      <BaseButton variant="secondary" size="small" @click="clearFilters">
-        清除筛选
-      </BaseButton>
-      <BaseButton size="small" @click="applyFilters">
-        应用筛选
-      </BaseButton>
-    </div>
   </div>
 </template>
 
@@ -120,6 +122,8 @@ const props = defineProps<Props>()
 interface Emits {
   setFilter: [key: string, value: any]
   toggleTagFilter: [tagId: string]
+  toggleDiseaseFilter: [diseaseId: string]
+  toggleTemplateTypeFilter: [typeId: string]
   clearFilters: []
   applyFilters: []
 }
@@ -138,6 +142,20 @@ const setFilter = (key: string, value: any) => {
  */
 const toggleTagFilter = (tagId: string) => {
   emit('toggleTagFilter', tagId)
+}
+
+/**
+ * 切换病种筛选
+ */
+const toggleDiseaseFilter = (diseaseId: string) => {
+  emit('toggleDiseaseFilter', diseaseId)
+}
+
+/**
+ * 切换模板类型筛选
+ */
+const toggleTemplateTypeFilter = (typeId: string) => {
+  emit('toggleTemplateTypeFilter', typeId)
 }
 
 /**
@@ -237,9 +255,9 @@ const applyFilters = () => {
   display: flex;
   gap: 10px;
   justify-content: flex-end;
-  padding-top: 12px;
-  border-top: 1px solid var(--border-light);
-  margin-top: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 16px;
 }
 
 /* 滚动条样式 */

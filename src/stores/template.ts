@@ -65,6 +65,9 @@ export const useTemplateStore = defineStore('template', () => {
     const isFilterPanelOpen = ref(false)
     const searchKeyword = ref('')
 
+    // 编辑模式
+    const isEditMode = ref(false)
+
     // 计算属性 - 过滤后的模板列表
     const filteredTemplates = computed(() => {
         let result = templates.value
@@ -104,6 +107,27 @@ export const useTemplateStore = defineStore('template', () => {
         // 按筛选条件过滤
         if (filterOptions.value.isFavorite) {
             result = result.filter(template => template.isFavorite)
+        }
+
+        // 按病种筛选（多选）
+        if (filterOptions.value.disease && filterOptions.value.disease.length > 0) {
+            result = result.filter(template => 
+                filterOptions.value.disease!.includes(template.disease)
+            )
+        }
+
+        // 按模板类型筛选（多选）
+        if (filterOptions.value.templateType && filterOptions.value.templateType.length > 0) {
+            result = result.filter(template => 
+                filterOptions.value.templateType!.includes(template.templateType)
+            )
+        }
+
+        // 按标签筛选（多选）
+        if (filterOptions.value.tags && filterOptions.value.tags.length > 0) {
+            result = result.filter(template => 
+                filterOptions.value.tags!.some(tag => template.tags.includes(tag))
+            )
         }
 
         return result
@@ -321,6 +345,7 @@ export const useTemplateStore = defineStore('template', () => {
         filterOptions,
         isFilterPanelOpen,
         searchKeyword,
+        isEditMode,
 
         // 计算属性
         filteredTemplates,

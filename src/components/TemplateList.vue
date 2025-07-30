@@ -17,6 +17,7 @@
       <!-- 筛选面板 -->
       <FilterPanel :is-open="isFilterPanelOpen" :filter-options="filterOptions" :diseases="diseases"
         :template-types="templateTypes" :tags="tags" @set-filter="setFilter" @toggle-tag-filter="toggleTagFilter"
+        @toggle-disease-filter="toggleDiseaseFilter" @toggle-template-type-filter="toggleTemplateTypeFilter"
         @clear-filters="clearFilters" @apply-filters="applyFilters" />
 
     </div>
@@ -108,7 +109,13 @@ const setFilter = (key: string, value: any) => {
  * 清除筛选条件
  */
 const clearFilters = () => {
-  templateStore.setFilterOptions({})
+  templateStore.setFilterOptions({
+    isFavorite: undefined,
+    disease: [],
+    templateType: [],
+    tags: [],
+    searchKeyword: ''
+  })
 }
 
 /**
@@ -123,6 +130,28 @@ const toggleTagFilter = (tagId: string) => {
 }
 
 /**
+ * 切换病种筛选
+ */
+const toggleDiseaseFilter = (diseaseId: string) => {
+  const currentDiseases = filterOptions.value.disease || []
+  const newDiseases = currentDiseases.includes(diseaseId)
+    ? currentDiseases.filter(id => id !== diseaseId)
+    : [...currentDiseases, diseaseId]
+  templateStore.setFilterOptions({ disease: newDiseases })
+}
+
+/**
+ * 切换模板类型筛选
+ */
+const toggleTemplateTypeFilter = (typeId: string) => {
+  const currentTypes = filterOptions.value.templateType || []
+  const newTypes = currentTypes.includes(typeId)
+    ? currentTypes.filter(id => id !== typeId)
+    : [...currentTypes, typeId]
+  templateStore.setFilterOptions({ templateType: newTypes })
+}
+
+/**
  * 应用筛选
  */
 const applyFilters = () => {
@@ -134,12 +163,9 @@ const applyFilters = () => {
  */
 const handleAddTemplate = async () => {
   try {
-    // 使用store的createTemplate方法创建新模板
-    const newTemplate = await templateStore.createTemplate({
-      title: '新建模板'
-    })
-
-    console.log('新模板创建成功:', newTemplate)
+    templateStore.isEditMode = true
+    templateStore.selectedTemplate = null
+    // console.log('新模板创建成功:', newTemplate)
   } catch (error) {
     console.error('创建模板失败:', error)
     // 这里可以显示错误提示

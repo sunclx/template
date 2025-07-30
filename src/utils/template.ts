@@ -19,7 +19,29 @@ export async function copyToClipboard(template: Template) {
         // TODO: 显示错误提示
     }
 }
-
+/**
+ * 创建默认模板对象
+ * @returns 包含默认值的模板对象
+ */
+export function defaultTemplateValue(): Template {
+    const now = Date.now()
+    return {
+        id: 'template-' + now, // 空ID，通常在保存时由数据库生成
+        title: '新建模板',
+        sections: [
+            {
+                title: '',
+                content: ''
+            },
+        ],
+        disease: '未分类', // 默认无病种
+        templateType: '未分类', // 默认无类型
+        tags: [], // 默认无标签
+        createdAt: now,
+        updatedAt: now,
+        isFavorite: false
+    }
+}
 
 
 

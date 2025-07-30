@@ -105,34 +105,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, toRaw, toRef } from 'vue'
 import { VueDraggableNext } from 'vue-draggable-next'
 import { useTemplateStore } from '../stores/template'
-import type { Template } from '../types'
 import BaseButton from './common/BaseButton.vue'
 import SelectDropdown from './common/SelectDropdown.vue'
-import { copyToClipboard } from '@/utils/template'
+import { copyToClipboard, defaultTemplateValue } from '@/utils/template'
 
-// Props
-interface Props {
-  template: Template
-}
-
-const props = defineProps<Props>()
-
-// Emits
-interface Emits {
-  save: [template: Template | undefined]
-  cancel: []
-}
-
-const emit = defineEmits<Emits>()
 
 const templateStore = useTemplateStore()
+const selectedTemplate = templateStore.selectedTemplate
 
 // 响应式数据
-const template = ref(props.template)
-
+const template = ref(selectedTemplate ? structuredClone(toRaw(selectedTemplate)) : defaultTemplateValue())
+const isEditing = toRef(templateStore, 'isEditMode')
 
 // 计算属性
 const availableTags = computed(() => templateStore.tags)
@@ -213,20 +199,25 @@ const typeOptions = computed(() =>
     value: type.name
   }))
 )
-
-
 /**
  * 保存编辑
  */
 const handleSave = () => {
-  emit('save', template.value)
+  if (template.value) {
+    templateStore.updateTemplate({
+      ...template.value,
+      updatedAt: Date.now()
+    })
+  }
 }
 
 /**
  * 取消编辑
  */
 const handleCancel = () => {
-  emit('cancel')
+  if (template.value) {
+    isEditing.value = false
+  }
 }
 
 /**
@@ -258,7 +249,6 @@ const addSection = () => {
  */
 const removeSection = (index: number) => {
   template.value.sections.splice(index, 1)
-  emit('save', template.value)
 }
 
 /**

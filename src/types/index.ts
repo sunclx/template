@@ -47,8 +47,8 @@ export interface TemplateTypeInfo {
 
 // 筛选条件
 export interface FilterOptions {
-  disease?: Disease;
-  templateType?: TemplateType;
+  disease?: Disease[];
+  templateType?: TemplateType[];
   tags?: TagID[];
   isFavorite?: boolean;
   searchKeyword?: string;
