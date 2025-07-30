@@ -8,7 +8,6 @@
       </div>
       <div class="header-actions">
         <BaseButton icon="fas fa-plus" @click="handleAddTemplate">
-          新建模板
         </BaseButton>
         <BaseButton variant="secondary" icon="fas fa-filter" @click="toggleFilterPanel">
           筛选
@@ -16,107 +15,9 @@
       </div>
 
       <!-- 筛选面板 -->
-      <div class="filter-panel" v-if="isFilterPanelOpen" @click.stop>
-        <!-- 收藏状态筛选 -->
-        <div class="filter-group">
-          <div class="filter-title">收藏状态</div>
-          <div class="filter-options">
-            <div class="filter-option" :class="{ active: filterOptions.isFavorite === undefined }"
-              @click="setFilter('isFavorite', undefined)">
-              全部
-            </div>
-            <div class="filter-option" :class="{ active: filterOptions.isFavorite === true }"
-              @click="setFilter('isFavorite', true)">
-              已收藏
-            </div>
-            <div class="filter-option" :class="{ active: filterOptions.isFavorite === false }"
-              @click="setFilter('isFavorite', false)">
-              未收藏
-            </div>
-          </div>
-        </div>
-
-        <!-- 病种分类筛选 -->
-        <div class="filter-group">
-          <div class="filter-title">病种分类</div>
-          <div class="filter-options">
-            <div class="filter-option" :class="{ active: filterOptions.disease === undefined }"
-              @click="setFilter('disease', undefined)">
-              全部病种
-            </div>
-            <div v-for="disease in diseases" :key="disease.name" class="filter-option"
-              :class="{ active: filterOptions.disease === disease.name }" @click="setFilter('disease', disease.name)">
-              {{ disease.name }}
-            </div>
-          </div>
-        </div>
-
-        <!-- 模板类型筛选 -->
-        <div class="filter-group">
-          <div class="filter-title">模板类型</div>
-          <div class="filter-options">
-            <div class="filter-option" :class="{ active: filterOptions.templateType === undefined }"
-              @click="setFilter('templateType', undefined)">
-              全部类型
-            </div>
-            <div v-for="type in templateTypes" :key="type.name" class="filter-option"
-              :class="{ active: filterOptions.templateType === type.name }"
-              @click="setFilter('templateType', type.name)">
-              {{ type.name }}
-            </div>
-          </div>
-        </div>
-
-        <!-- 标签筛选 -->
-        <div class="filter-group">
-          <div class="filter-title">标签筛选</div>
-          <div class="filter-options">
-            <div class="filter-option" :class="{ active: !filterOptions.tags || filterOptions.tags.length === 0 }"
-              @click="setFilter('tags', [])">
-              全部标签
-            </div>
-            <div v-for="tag in tags.filter(t => t.name !== 'all')" :key="tag.name" class="filter-option tag-option"
-              :class="{ active: filterOptions.tags && filterOptions.tags.includes(tag.name) }"
-              @click="toggleTagFilter(tag.name)">
-              <i class="fas fa-tag" :style="{ color: tag.color }"></i>
-              {{ tag.name }}
-            </div>
-          </div>
-        </div>
-
-        <!-- 时间范围筛选 -->
-        <div class="filter-group">
-          <div class="filter-title">更新时间</div>
-          <div class="filter-options">
-            <div class="filter-option" :class="{ active: filterOptions.timeRange === undefined }"
-              @click="setFilter('timeRange', undefined)">
-              全部时间
-            </div>
-            <div class="filter-option" :class="{ active: filterOptions.timeRange === 'today' }"
-              @click="setFilter('timeRange', 'today')">
-              今天
-            </div>
-            <div class="filter-option" :class="{ active: filterOptions.timeRange === 'week' }"
-              @click="setFilter('timeRange', 'week')">
-              本周
-            </div>
-            <div class="filter-option" :class="{ active: filterOptions.timeRange === 'month' }"
-              @click="setFilter('timeRange', 'month')">
-              本月
-            </div>
-          </div>
-        </div>
-
-        <!-- 筛选操作按钮 -->
-        <div class="filter-actions">
-          <BaseButton variant="secondary" size="small" @click="clearFilters">
-            清除筛选
-          </BaseButton>
-          <BaseButton size="small" @click="applyFilters">
-            应用筛选
-          </BaseButton>
-        </div>
-      </div>
+      <FilterPanel :is-open="isFilterPanelOpen" :filter-options="filterOptions" :diseases="diseases"
+        :template-types="templateTypes" :tags="tags" @set-filter="setFilter" @toggle-tag-filter="toggleTagFilter"
+        @clear-filters="clearFilters" @apply-filters="applyFilters" />
 
     </div>
 
@@ -165,7 +66,7 @@ import { useTemplateStore } from '../stores/template'
 import type { TemplateID } from '../types'
 import BaseButton from './common/BaseButton.vue'
 import BaseCard from './common/BaseCard.vue'
-import TagList from './common/TagList.vue'
+import FilterPanel from './FilterPanel.vue'
 
 const templateStore = useTemplateStore()
 
@@ -195,14 +96,6 @@ const toggleFilterPanel = () => {
   templateStore.toggleFilterPanel()
 }
 
-/**
- * 处理点击外部区域关闭筛选面板
- */
-const handleOutsideClick = () => {
-  if (isFilterPanelOpen.value) {
-    templateStore.closeFilterPanel()
-  }
-}
 
 /**
  * 设置筛选条件
@@ -269,58 +162,6 @@ const handleToggleFavorite = (templateId: TemplateID) => {
   templateStore.toggleFavorite(templateId)
 }
 
-/**
- * 获取病种名称
- */
-const getDiseaseName = (diseaseId: string) => {
-  const disease = diseases.value.find(d => d.name === diseaseId)
-  return disease?.name || '未知病种'
-}
-
-/**
- * 获取模板类型名称
- */
-const getTemplateTypeName = (typeId: string) => {
-  const type = templateTypes.value.find(t => t.name === typeId)
-  return type?.name || '未知类型'
-}
-
-/**
- * 获取标签名称
- */
-const getTagName = (tagName: string) => {
-  const tag = tags.value.find(t => t.name === tagName)
-  return tag?.name || '未知标签'
-}
-
-/**
- * 获取模板标签列表（用于TagList组件）
- */
-const getTemplateTags = (template: any) => {
-  const result = []
-
-  // 添加模板类型标签
-  result.push({
-    name: getTemplateTypeName(template.templateType),
-    variant: 'type'
-  })
-
-  // 添加病种分类标签
-  result.push({
-    name: getDiseaseName(template.disease),
-    variant: 'category'
-  })
-
-  // 添加其他标签
-  template.tags.forEach((tagId: string) => {
-    result.push({
-      name: getTagName(tagId),
-      variant: 'default'
-    })
-  })
-
-  return result
-}
 
 /**
  * 格式化时间
@@ -408,102 +249,27 @@ const formatTime = (timestamp: number) => {
 
 /* 按钮样式已迁移到BaseButton组件 */
 
-.filter-panel {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  width: 280px;
-  max-height: 400px;
-  overflow-y: auto;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  padding: 12px;
-  z-index: 1000;
-  margin-top: 4px;
-  animation: fadeInUp 0.2s ease forwards;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.filter-group {
-  margin-bottom: 12px;
-}
-
-.filter-group:last-of-type {
-  margin-bottom: 8px;
-}
-
-.filter-title {
-  font-weight: 600;
-  margin-bottom: 10px;
-  color: var(--text-secondary);
-  font-size: 14px;
-}
-
-.filter-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.filter-option {
-  background-color: var(--section-bg);
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.filter-option:hover,
-.filter-option.active {
-  background-color: var(--doc-primary);
-  color: white;
-}
-
-.filter-option.tag-option {
-  margin-bottom: 8px;
-}
-
-.filter-option.tag-option i {
-  font-size: 12px;
-}
-
-.filter-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  padding-top: 12px;
-  border-top: 1px solid var(--border-light);
-  margin-top: 16px;
-}
-
-/* 筛选按钮样式已迁移到BaseButton组件 */
+/* 筛选面板样式已迁移到FilterPanel组件 */
 
 .template-list {
   flex: 1;
   overflow-y: auto;
-  padding: 10px 12px;
+  padding: 4px 6px;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  /* 滚动条默认隐藏，滚动时显示 */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s ease;
 }
+
+/* 鼠标悬停或滚动时显示滚动条 */
+.template-list:hover,
+.template-list:active {
+  scrollbar-color: var(--border-light) var(--section-bg);
+}
+
 
 .template-list>.base-card {
   flex-shrink: 0;
@@ -586,25 +352,21 @@ const formatTime = (timestamp: number) => {
 }
 
 /* 滚动条样式 */
-.template-list::-webkit-scrollbar,
-.filter-panel::-webkit-scrollbar {
+.template-list::-webkit-scrollbar {
   width: 6px;
 }
 
-.template-list::-webkit-scrollbar-track,
-.filter-panel::-webkit-scrollbar-track {
+.template-list::-webkit-scrollbar-track {
   background: var(--section-bg);
   border-radius: 3px;
 }
 
-.template-list::-webkit-scrollbar-thumb,
-.filter-panel::-webkit-scrollbar-thumb {
+.template-list::-webkit-scrollbar-thumb {
   background: var(--border-light);
   border-radius: 3px;
 }
 
-.template-list::-webkit-scrollbar-thumb:hover,
-.filter-panel::-webkit-scrollbar-thumb:hover {
+.template-list::-webkit-scrollbar-thumb:hover {
   background: var(--border-emphasis);
 }
 </style>

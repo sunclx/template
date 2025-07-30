@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref } from 'vue'
 import { useTemplateStore } from '../stores/template'
 import type { CategoryView } from '../types'
 import CategoryItem from './common/CategoryItem.vue'
