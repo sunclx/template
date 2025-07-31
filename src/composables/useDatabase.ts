@@ -8,11 +8,11 @@ import type { Template, Tag } from '../types'
  */
 export const QUERY_KEYS = {
   templates: ['templates'] as const,
-  template: (id: string) => ['template', id] as const,
+  template: (id: MaybeRef<string>) => ['template', id] as const,
   diseases: ['diseases'] as const,
   templateTypes: ['templateTypes'] as const,
   tags: ['tags'] as const,
-  search: (keyword: string) => ['search', keyword] as const,
+  search: (keyword: MaybeRef<string>) => ['search', keyword] as const,
 } as const
 
 /**
@@ -31,11 +31,11 @@ export function useTemplatesQuery(enabled: MaybeRef<boolean> = true) {
 /**
  * 根据ID获取模板的查询钩子
  */
-export function useTemplateQuery(id: string) {
+export function useTemplateQuery(id: Ref<string>) {
   return useQuery({
     queryKey: QUERY_KEYS.template(id),
-    queryFn: () => DatabaseService.getTemplateById(id),
-    enabled: !!id, // 只有当id存在时才执行查询
+    queryFn: () => DatabaseService.getTemplateById(id.value),
+    enabled: !!id.value, // 只有当id存在时才执行查询
     // staleTime: 5 * 60 * 1000,
     // gcTime: 10 * 60 * 1000,
   })

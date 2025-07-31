@@ -105,23 +105,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, toRaw, toRef } from 'vue'
+import { computed, ref, watch, toRaw } from 'vue'
 import { VueDraggableNext } from 'vue-draggable-next'
 import { useTemplateStore } from '../stores/template'
 import BaseButton from './common/BaseButton.vue'
 import SelectDropdown from './common/SelectDropdown.vue'
 import { copyToClipboard, defaultTemplateValue } from '@/utils/template'
-
+import { storeToRefs } from 'pinia'
 
 const templateStore = useTemplateStore()
-const selectedTemplate = templateStore.selectedTemplate
+const { selectedTemplate, tags: availableTags, diseases, templateTypes } = storeToRefs(templateStore)
 
 // 响应式数据
-const template = ref(selectedTemplate ? structuredClone(toRaw(selectedTemplate)) : defaultTemplateValue())
+const template = ref(selectedTemplate.value ? structuredClone(toRaw(selectedTemplate.value)) : defaultTemplateValue())
 
-
-// 计算属性
-const availableTags = computed(() => templateStore.tags)
 
 // 标签管理相关
 const newTagInput = ref('')
@@ -129,7 +126,7 @@ const showAvailableTags = ref(false)
 
 // 过滤可用标签（排除已选择的）
 const filteredAvailableTags = computed(() => {
-  return availableTags.value.filter(tag => tag.name.includes(newTagInput.value) && !template.value.tags.includes(tag.name))
+  return availableTags.value.filter(tag => tag.name.includes(newTagInput.value) && !template.value.tags.includes(tag.name)) || []
 })
 
 /**
@@ -184,7 +181,7 @@ watch(newTagInput, () => {
  * 病种选项列表（转换为下拉组件格式）
  */
 const diseaseOptions = computed(() =>
-  templateStore.diseases.map(disease => ({
+  diseases.value.map(disease => ({
     label: disease.name,
     value: disease.name
   }))
@@ -194,7 +191,7 @@ const diseaseOptions = computed(() =>
  * 类型选项列表（转换为下拉组件格式）
  */
 const typeOptions = computed(() =>
-  templateStore.templateTypes.map(type => ({
+  templateTypes.value.map(type => ({
     label: type.name,
     value: type.name
   }))

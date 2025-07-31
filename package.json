@@ -21,6 +21,7 @@
     "naive-ui": "^2.42.0",
     "pinia": "^3.0.3",
     "pinyin-pro": "^3.26.0",
+    "uuid": "^11.1.0",
     "vue": "^3.5.18",
     "vue-draggable-next": "^2.2.1"
   },

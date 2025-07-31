@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
+import { computed } from 'vue'
 import TitleBar from './components/TitleBar.vue'
 import Sidebar from './components/Sidebar.vue'
 import TemplateList from './components/TemplateList.vue'
@@ -44,7 +44,6 @@ import StatusBar from './components/StatusBar.vue'
 import TemplateQueryExample from './components/TemplateQueryExample.vue'
 
 import { useTemplateStore } from './stores/template.ts'
-import { useInitializeDatabaseMutation } from "./composables/useDatabase";
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools'
 
 

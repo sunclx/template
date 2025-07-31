@@ -1,19 +1,18 @@
 import { defineStore } from 'pinia'
-import { ref, computed, watch } from 'vue'
-import { useQueryClient, useMutation } from '@tanstack/vue-query'
+import { ref, computed } from 'vue'
 import { matchText } from '../utils/pinyin'
 import {
   useTemplatesQuery,
+  useTemplateQuery,
   useDiseasesQuery,
   useTemplateTypesQuery,
   useTagsQuery,
-  useSearchTemplatesQuery,
+  // useSearchTemplatesQuery,
   useToggleFavoriteMutation,
   useSaveTemplateMutation,
   useDeleteTemplateMutation,
   useInitializeDatabaseMutation
 } from '../composables/useDatabase'
-import { DatabaseService } from '../services/database'
 import type {
   Template,
   FilterOptions,
@@ -27,11 +26,11 @@ import type {
 export const useTemplateStore = defineStore('template', () => {
   // 当前视图状态
   const currentView = ref<CategoryView>('disease')
-  const selectedTemplate = ref<Template | null>(null)
   const selectedCategory = ref<string>('all')
   const filterOptions = ref<FilterOptions>({})
   const isFilterPanelOpen = ref(false)
   const searchKeyword = ref('')
+  const selectedTemplateId = ref<TemplateID>('没有')
 
   const isQueryExample = ref(false);
   const isEditMode = ref(false)
@@ -41,73 +40,21 @@ export const useTemplateStore = defineStore('template', () => {
   const { mutate: initDatabase, isSuccess } = useInitializeDatabaseMutation();
   initDatabase()
 
-
-
   const templatesQuery = useTemplatesQuery(isSuccess);
-  // const diseasesQuery = useDiseasesQuery()
-  // const templateTypesQuery = useTemplateTypesQuery()
-  // const tagsQuery = useTagsQuery()
-
-  const { data: templates, isLoading } = templatesQuery;
-  // const { data: diseases } = diseasesQuery;
-  // const { data: templateTypes } = templateTypesQuery;
-  // const { data: tags } = tagsQuery;
-
-  // 计算属性 - 过滤后的模板列表
-  const diseases = computed(() => {
-    const diseaseMap = new Map<string, number>();
-    if (!templates.value) {
-      return []
-    }
-    templates.value.forEach(template => {
-      diseaseMap.set(template.disease, (diseaseMap.get(template.disease) || 0) + 1)
-    })
-    return Array.from(diseaseMap.entries()).map(([name, templateCount]) => ({
-      name,
-      templateCount
-    }))
-  })
-
-  const templateTypes = computed(() => {
-    const templateTypeMap = new Map<string, number>()
-    if (!templates.value) {
-      return []
-    }
-    templates.value.forEach(template => {
-      templateTypeMap.set(template.templateType, (templateTypeMap.get(template.templateType) || 0) + 1)
-    })
-    return Array.from(templateTypeMap.entries()).map(([name, templateCount]) => ({
-      name,
-      templateCount
-    }))
-  })
-
-  const tags = computed(() => {
-    const tagMap = new Map<string, number>();
-    if (!templates.value) {
-      return []
-    }
-    templates.value.forEach(template => {
-      template.tags.forEach(tag => {
-        tagMap.set(tag, (tagMap.get(tag) || 0) + 1)
-      })
-    })
-    return Array.from(tagMap.entries()).map(([name, templateCount]) => ({
-      name,
-      templateCount,
-      color: '#007bff' // todo! 随机生成颜色
-    }))
-  })
+  const { data: templatesData } = templatesQuery;
+  const { data: diseasesData } = useDiseasesQuery();
+  const { data: templateTypesData } = useTemplateTypesQuery();
+  const { data: tagsData } = useTagsQuery();
+  const { data: selectedTemplate } = useTemplateQuery(selectedTemplateId);
 
 
-
-
-
-
-
+  const templates = computed(() => templatesData.value || [])
+  const diseases = computed(() => diseasesData.value || [])
+  const templateTypes = computed(() => templateTypesData.value || [])
+  const tags = computed(() => tagsData.value || [])
 
   // 搜索查询（仅在有搜索关键词时启用）
-  const searchQuery = useSearchTemplatesQuery(searchKeyword)
+  // const searchQuery = useSearchTemplatesQuery(searchKeyword)
 
   // 变更钩子
   const toggleFavoriteMutation = useToggleFavoriteMutation()
@@ -129,7 +76,7 @@ export const useTemplateStore = defineStore('template', () => {
     let result = currentTemplates.value
 
     // 如果没有使用搜索API，则在前端进行拼音搜索
-    if (searchKeyword.value && searchKeyword.value.trim().length > 0 && !searchQuery.isEnabled.value) {
+    if (searchKeyword.value && searchKeyword.value.trim().length > 0) {
       const keyword = searchKeyword.value.trim()
       result = result.filter(template => {
         // 搜索模板标题
@@ -188,6 +135,53 @@ export const useTemplateStore = defineStore('template', () => {
 
     return result
   })
+
+
+  // 计算属性 - 过滤后的模板列表
+  // const filteredDiseases = computed(() => {
+  //   if (!filteredTemplates.value) {
+  //     return []
+  //   }
+  //   const diseaseMap = new Map<string, number>();
+  //   filteredTemplates.value.forEach(template => {
+  //     diseaseMap.set(template.disease, (diseaseMap.get(template.disease) || 0) + 1)
+  //   })
+  //   return Array.from(diseaseMap.entries()).map(([name, templateCount]) => ({
+  //     name,
+  //     templateCount
+  //   }))
+  // })
+
+  // const filteredTemplateTypes = computed(() => {
+  //   if (!filteredTemplates.value) {
+  //     return []
+  //   }
+  //   const templateTypeMap = new Map<string, number>()
+  //   filteredTemplates.value.forEach(template => {
+  //     templateTypeMap.set(template.templateType, (templateTypeMap.get(template.templateType) || 0) + 1)
+  //   })
+  //   return Array.from(templateTypeMap.entries()).map(([name, templateCount]) => ({
+  //     name,
+  //     templateCount
+  //   }))
+  // })
+
+  // const filteredTags = computed(() => {
+  //   if (!filteredTemplates.value) {
+  //     return []
+  //   }
+  //   const tagMap = new Map<string, number>();
+  //   filteredTemplates.value.forEach(template => {
+  //     template.tags.forEach(tag => {
+  //       tagMap.set(tag, (tagMap.get(tag) || 0) + 1)
+  //     })
+  //   })
+  //   return Array.from(tagMap.entries()).map(([name, templateCount]) => ({
+  //     name,
+  //     templateCount,
+  //     color: '#007bff' // todo! 随机生成颜色
+  //   }))
+  // })
 
   // 计算属性 - 当前分类列表
   const currentCategories = computed(() => {
@@ -253,8 +247,10 @@ export const useTemplateStore = defineStore('template', () => {
    * 选择模板
    */
   const selectTemplate = (templateId: TemplateID) => {
-    const template = currentTemplates.value.find(t => t.id === templateId)
-    selectedTemplate.value = template || null
+    // const template = currentTemplates.value.find(t => t.id === templateId)
+
+    // selectedTemplate.value = template.value || null
+    selectedTemplateId.value = templateId
   }
 
   /**
@@ -263,7 +259,6 @@ export const useTemplateStore = defineStore('template', () => {
   const toggleFavorite = async (templateId: TemplateID) => {
     try {
       await toggleFavoriteMutation.mutateAsync(templateId)
-      // templatesQuery.refetch()
     } catch (error) {
       console.error('Failed to toggle favorite:', error)
       throw error
@@ -293,7 +288,6 @@ export const useTemplateStore = defineStore('template', () => {
       if (selectedTemplate.value?.id === templateId) {
         selectedTemplate.value = null
       }
-      templatesQuery.refetch()
     } catch (error) {
       console.error('Failed to delete template:', error)
       throw error
@@ -367,11 +361,14 @@ export const useTemplateStore = defineStore('template', () => {
     isQueryExample,
 
     // 查询状态
-    isLoading,
+    // isLoading,
     error,
 
     // 计算属性
     filteredTemplates,
+    // filteredDiseases,
+    // filteredTags,
+    // filteredTemplateTypes,
     currentCategories,
     currentTemplates,
 
@@ -380,7 +377,7 @@ export const useTemplateStore = defineStore('template', () => {
     // diseasesQuery,
     // templateTypesQuery,
     // tagsQuery,
-    searchQuery,
+    // searchQuery,
 
     // 变更对象
     toggleFavoriteMutation,

@@ -13,7 +13,7 @@
     </div>
 
     <!-- 可滚动的内容区域 -->
-    <div v-if="!isLoading && templates" class="category-content" ref="categoryContentRef">
+    <div class="category-content" ref="categoryContentRef">
       <!-- 按病种分类 -->
       <div class="category-view" :class="{ active: currentView === 'disease' }" v-if="currentView === 'disease'">
         <div class="category-items">
@@ -41,7 +41,7 @@
           <CategoryItem label="全部" :count="templates.length" :active="selectedCategory === 'all'" value="all"
             @click="handleCategorySelect" />
           <CategoryItem v-for="tag in tags" :key="tag.name" :label="tag.name" :count="getTagTemplateCount(tag.name)"
-            :active="selectedCategory === tag.name" :value="tag.name" icon="fas fa-tag" :icon-color="tag.color"
+            :active="selectedCategory === tag.name" :value="tag.name" icon="fas fa-tag" :icon-color="randomColor()"
             @click="handleCategorySelect" />
         </div>
       </div>
@@ -50,27 +50,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { useTemplateStore } from '../stores/template'
 import type { CategoryView } from '../types'
 import CategoryItem from './common/CategoryItem.vue'
 import { storeToRefs } from 'pinia'
+import { randomColor } from '@/utils/color'
 
 const templateStore = useTemplateStore()
-const { currentView, selectedCategory, diseases, templateTypes, tags, templates, isLoading } = storeToRefs(templateStore)
+const { currentView, selectedCategory,
+  filteredTemplates: templates,
+  diseases,
+  tags,
+  templateTypes } = storeToRefs(templateStore)
 
 // 模板引用
 const categoryContentRef = ref<HTMLElement>()
-
-// 计算属性
-// const currentView = computed(() => templateStore.currentView)
-// const selectedCategory = computed(() => templateStore.selectedCategory)
-// const diseases = computed(() => templateStore.diseases)
-// const templateTypes = computed(() => templateStore.templateTypes)
-// const tags = computed(() => templateStore.tags)
-// const templates = computed(() => templateStore.templates)
-
-
 
 /**
  * 处理视图切换

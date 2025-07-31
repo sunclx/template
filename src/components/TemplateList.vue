@@ -120,7 +120,7 @@ const findMatchIndex = (text: string, keyword: string): number => {
 /**
  * 根据拼音首字母位置找到对应的中文字符位置
  */
-const findChineseCharPosition = (text: string, pinyinIndex: number, keywordLength: number): number => {
+const findChineseCharPosition = (text: string, pinyinIndex: number, _keywordLength: number): number => {
   // 简化处理：假设每个中文字符对应一个拼音首字母
   return Math.min(pinyinIndex, text.length - 1)
 }
