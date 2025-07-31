@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { matchText } from '../utils/pinyin'
 import {
   useTemplatesQuery,
@@ -9,7 +9,8 @@ import {
   useSearchTemplatesQuery,
   useToggleFavoriteMutation,
   useSaveTemplateMutation,
-  useDeleteTemplateMutation
+  useDeleteTemplateMutation,
+  useInitializeDatabaseMutation
 } from '../composables/useDatabase'
 import type {
   Template,
@@ -30,11 +31,28 @@ export const useTemplateQueryStore = defineStore('templateQuery', () => {
   const isFilterPanelOpen = ref(false)
   const searchKeyword = ref('')
 
+  const isQueryExample = ref(false);
+  const isEditMode = ref(false)
+
   // TanStack Query钩子
+  // 初始化数据库
+  useInitializeDatabaseMutation();
   const templatesQuery = useTemplatesQuery()
   const diseasesQuery = useDiseasesQuery()
   const templateTypesQuery = useTemplateTypesQuery()
   const tagsQuery = useTagsQuery()
+
+  const { data: templates } = templatesQuery;
+  const { data: diseases } = diseasesQuery;
+  const { data: templateTypes } = templateTypesQuery;
+  const { data: tags } = tagsQuery;
+
+  watch(diseases, (newTemplates) => {
+    if (newTemplates) {
+      // 初始化数据库
+      console.log('diseases', newTemplates)
+    }
+  })
 
   // 搜索查询（仅在有搜索关键词时启用）
   const searchQuery = useSearchTemplatesQuery(searchKeyword)
@@ -93,6 +111,27 @@ export const useTemplateQueryStore = defineStore('templateQuery', () => {
     // 按筛选条件过滤
     if (filterOptions.value.isFavorite) {
       result = result.filter(template => template.isFavorite)
+    }
+
+    // 按病种筛选（多选）
+    if (filterOptions.value.disease && filterOptions.value.disease.length > 0) {
+      result = result.filter(template =>
+        filterOptions.value.disease!.includes(template.disease)
+      )
+    }
+
+    // 按模板类型筛选（多选）
+    if (filterOptions.value.templateType && filterOptions.value.templateType.length > 0) {
+      result = result.filter(template =>
+        filterOptions.value.templateType!.includes(template.templateType)
+      )
+    }
+
+    // 按标签筛选（多选）
+    if (filterOptions.value.tags && filterOptions.value.tags.length > 0) {
+      result = result.filter(template =>
+        filterOptions.value.tags!.some(tag => template.tags.includes(tag))
+      )
     }
 
     return result
@@ -246,14 +285,30 @@ export const useTemplateQueryStore = defineStore('templateQuery', () => {
     ])
   }
 
+  /**
+     * 设置编辑模式
+     */
+  const setEditMode = (isEdit: boolean) => {
+    isEditMode.value = isEdit
+  }
+  const toggleQueryExample = () => {
+    isQueryExample.value = !isQueryExample.value;
+  }
+
   return {
     // 状态
+    templates,
+    diseases,
+    templateTypes,
+    tags,
     currentView,
     selectedTemplate,
     selectedCategory,
     filterOptions,
     isFilterPanelOpen,
     searchKeyword,
+    isEditMode,
+    isQueryExample,
 
     // 查询状态
     isLoading,
@@ -287,6 +342,8 @@ export const useTemplateQueryStore = defineStore('templateQuery', () => {
     toggleFilterPanel,
     closeFilterPanel,
     setFilterOptions,
-    refreshData
+    refreshData,
+    setEditMode,
+    toggleQueryExample,
   }
 })

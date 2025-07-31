@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
-import type { Template, Tag } from '../types'
+import type { Template, Tag, DiseaseInfo, TemplateTypeInfo } from '../types'
 
 /**
  * 数据库服务类，提供与Rust后端数据库交互的方法
@@ -94,50 +94,29 @@ export class DatabaseService {
   /**
    * 获取所有疾病分类
    */
-  static async getAllDiseases(): Promise<string[]> {
+  static async getAllDiseases(): Promise<DiseaseInfo[]> {
     try {
-      return await invoke<string[]>('get_all_diseases')
+      return await invoke<DiseaseInfo[]>('get_all_diseases')
     } catch (error) {
       console.error('Failed to get all diseases:', error)
       throw error
     }
   }
 
-  /**
-   * 保存疾病分类
-   */
-  static async saveDisease(disease: string): Promise<string> {
-    try {
-      return await invoke<string>('save_disease', { disease })
-    } catch (error) {
-      console.error('Failed to save disease:', error)
-      throw error
-    }
-  }
+
 
   /**
    * 获取所有模板类型
    */
-  static async getAllTemplateTypes(): Promise<string[]> {
+  static async getAllTemplateTypes(): Promise<TemplateTypeInfo[]> {
     try {
-      return await invoke<string[]>('get_all_template_types')
+      return await invoke<TemplateTypeInfo[]>('get_all_template_types')
     } catch (error) {
       console.error('Failed to get all template types:', error)
       throw error
     }
   }
 
-  /**
-   * 保存模板类型
-   */
-  static async saveTemplateType(templateType: string): Promise<string> {
-    try {
-      return await invoke<string>('save_template_type', { templateType })
-    } catch (error) {
-      console.error('Failed to save template type:', error)
-      throw error
-    }
-  }
 
   /**
    * 获取所有标签
@@ -171,6 +150,31 @@ export class DatabaseService {
       return await invoke<string>('init_sample_data')
     } catch (error) {
       console.error('Failed to initialize sample data:', error)
+      throw error
+    }
+  }
+
+  /**
+   * 批量导入模板
+   */
+  static async importTemplates(templates: Template[]): Promise<string> {
+    try {
+
+      return await invoke<string>('import_templates', { templates })
+    } catch (error) {
+      console.error('Failed to import templates:', error)
+      throw error
+    }
+  }
+
+  /**
+   * 导出所有模板
+   */
+  static async exportAllTemplates(): Promise<Template[]> {
+    try {
+      return await this.getAllTemplates()
+    } catch (error) {
+      console.error('Failed to export templates:', error)
       throw error
     }
   }

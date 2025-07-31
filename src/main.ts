@@ -3,7 +3,6 @@ import { createPinia } from "pinia";
 import { VueQueryPlugin, QueryClient } from '@tanstack/vue-query';
 import App from "./App.vue";
 
-
 // 创建Vue应用实例
 const app = createApp(App);
 
@@ -33,5 +32,3 @@ app.use(VueQueryPlugin, {
 
 // 挂载应用
 app.mount("#app");
-
-// useInitializeDatabaseMutation();

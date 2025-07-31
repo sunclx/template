@@ -8,7 +8,6 @@ import type {
     CategoryView,
     TemplateID
 } from '../types'
-import { set } from '@vueuse/core'
 
 /**
  * 模板管理状态store

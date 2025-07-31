@@ -1,5 +1,5 @@
-mod database;
 mod commands;
+mod database;
 
 use commands::*;
 use database::DatabaseManager;
@@ -29,7 +29,7 @@ pub fn run() {
             get_all_template_types,
             get_all_tags,
             save_tag,
-            init_sample_data
+            import_template,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

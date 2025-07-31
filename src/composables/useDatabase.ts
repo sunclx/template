@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { computed, type Ref } from 'vue'
 import { DatabaseService } from '../services/database'
-import type { Template, Disease, TemplateTypeInfo, Tag, TemplateID } from '../types'
+import type { Template, Disease, TemplateType, Tag } from '../types'
 
 /**
  * 查询键常量
@@ -140,33 +140,6 @@ export function useToggleFavoriteMutation() {
   })
 }
 
-/**
- * 保存疾病分类的变更钩子
- */
-export function useSaveDiseaseMutation() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (disease: Disease) => DatabaseService.saveDisease(disease),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.diseases })
-    },
-  })
-}
-
-/**
- * 保存模板类型的变更钩子
- */
-export function useSaveTemplateTypeMutation() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (templateType: TemplateTypeInfo) => DatabaseService.saveTemplateType(templateType),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.templateTypes })
-    },
-  })
-}
 
 /**
  * 保存标签的变更钩子
@@ -203,6 +176,26 @@ export function useInitializeDatabaseMutation() {
     onSuccess: () => {
       // 初始化完成后，清除所有缓存并重新获取数据
       queryClient.clear()
+    },
+  })
+}
+
+/**
+ * 导入模板的变更钩子
+ */
+export function useImportTemplatesMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (templates: Template[]) => {
+      return await DatabaseService.importTemplates(templates)
+    },
+    onSuccess: () => {
+      // 导入成功后，刷新相关查询
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.templates })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.diseases })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.templateTypes })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags })
     },
   })
 }
