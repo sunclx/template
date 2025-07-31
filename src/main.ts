@@ -16,7 +16,7 @@ const queryClient = new QueryClient({
     queries: {
       retry: 3, // 查询失败时重试3次
       retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // 指数退避重试延迟
-      refetchOnWindowFocus: false, // 窗口聚焦时不自动重新获取
+      refetchOnWindowFocus: true, // 窗口聚焦时不自动重新获取
       staleTime: 5 * 60 * 1000, // 默认5分钟内数据被认为是新鲜的
     },
     mutations: {

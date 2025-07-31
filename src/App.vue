@@ -2,6 +2,7 @@
     <div class="app-container">
         <!-- 标题栏 -->
         <TitleBar />
+        <VueQueryDevtools />
 
 
         <!-- TanStack Query 示例页面 -->
@@ -44,6 +45,7 @@ import TemplateQueryExample from './components/TemplateQueryExample.vue'
 
 import { useTemplateStore } from './stores/template.ts'
 import { useInitializeDatabaseMutation } from "./composables/useDatabase";
+import { VueQueryDevtools } from '@tanstack/vue-query-devtools'
 
 
 // 初始化状态管理
@@ -53,19 +55,16 @@ const isQueryExample = computed(() => templateStore.isQueryExample);
 /**
  * 组件挂载时初始化数据库和加载数据
  */
-onMounted(async () => {
-    try {
-        console.log('正在初始化数据库...')
-        // todo! 这里应该是初始化数据库
-        const { mutate: initializeDatabase } = useInitializeDatabaseMutation();
-        initializeDatabase();
-        // 加载数据
-        await templateStore.loadDataFromDatabase()
-        console.log('数据加载完成')
-    } catch (error) {
-        console.error('初始化失败:', error)
-    }
-})
+// onMounted(async () => {
+//     try {
+//         console.log('正在初始化数据库...')
+//         useInitializeDatabaseMutation();
+
+//         console.log('数据加载完成')
+//     } catch (error) {
+//         console.error('初始化失败:', error)
+//     }
+// })
 </script>
 
 <style>

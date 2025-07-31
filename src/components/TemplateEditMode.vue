@@ -209,6 +209,7 @@ const handleSave = () => {
       updatedAt: Date.now()
     })
   }
+  templateStore.setEditMode(false)
 }
 
 /**

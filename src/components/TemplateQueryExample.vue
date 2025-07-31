@@ -14,33 +14,19 @@
     <div class="search-section">
       <div class="search-and-actions">
         <div class="search-box">
-          <input
-            type="text"
-            v-model="searchInput"
-            placeholder="搜索模板... (支持拼音搜索)"
-            class="search-input"
-          >
+          <input type="text" v-model="searchInput" placeholder="搜索模板... (支持拼音搜索)" class="search-input">
           <span class="search-icon">🔍</span>
           <span v-if="store.searchQuery.isFetching.value" class="search-loading">⏳</span>
         </div>
-        
+
         <!-- 导入导出按钮 -->
         <div class="import-export-actions">
-          <button 
-            @click="importTemplates" 
-            :disabled="isImporting"
-            class="action-btn import-btn"
-            title="导入模板"
-          >
+          <button @click="importTemplates" :disabled="isImporting" class="action-btn import-btn" title="导入模板">
             {{ isImporting ? '⏳' : '📥' }} 导入
           </button>
-          
+
           <div class="export-dropdown">
-            <button 
-              class="action-btn export-btn"
-              :disabled="isExporting"
-              title="导出模板"
-            >
+            <button class="action-btn export-btn" :disabled="isExporting" title="导出模板">
               {{ isExporting ? '⏳' : '📤' }} 导出
             </button>
             <div class="export-menu">
@@ -50,26 +36,17 @@
               <button @click="exportTemplates('filtered')" :disabled="isExporting">
                 导出筛选结果 ({{ store.filteredTemplates.length }})
               </button>
-              <button 
-                @click="exportTemplates('selected')" 
-                :disabled="isExporting || !store.selectedTemplate"
-              >
+              <button @click="exportTemplates('selected')" :disabled="isExporting || !store.selectedTemplate">
                 导出选中模板
               </button>
             </div>
           </div>
         </div>
-        
+
         <!-- 隐藏的文件输入 -->
-        <input
-          ref="fileInputRef"
-          type="file"
-          accept=".json"
-          @change="handleFileSelect"
-          style="display: none;"
-        />
+        <input ref="fileInputRef" type="file" accept=".json" @change="handleFileSelect" style="display: none;" />
       </div>
-      
+
       <button @click="refreshData" class="refresh-btn">
         刷新数据
       </button>
@@ -115,55 +92,51 @@
     </div>
 
     <!-- 错误状态 -->
-      <div v-if="store.error" class="error-state">
-        <div class="error-message">
-          <span class="error-icon">⚠️</span>
-          <p>数据加载失败: {{ store.error.message }}</p>
-          <button v-if="retryCount < maxRetries" @click="retry" class="retry-btn">
-            重试 ({{ retryCount }}/{{ maxRetries }})
-          </button>
-        </div>
+    <div v-if="store.error" class="error-state">
+      <div class="error-message">
+        <span class="error-icon">⚠️</span>
+        <p>数据加载失败: {{ store.error.message }}</p>
+        <button v-if="retryCount < maxRetries" @click="retry" class="retry-btn">
+          重试 ({{ retryCount }}/{{ maxRetries }})
+        </button>
       </div>
+    </div>
 
-      <!-- 空状态 -->
-      <div v-else-if="store.filteredTemplates.length === 0 && !store.isLoading" class="empty-state">
-        <div class="empty-message">
-          <span class="empty-icon">📝</span>
-          <p v-if="store.searchKeyword">未找到匹配的模板</p>
-          <p v-else>暂无模板数据</p>
-          <button @click="store.setSearchKeyword('')" v-if="store.searchKeyword" class="clear-search-btn">
-            清除搜索
-          </button>
-        </div>
+    <!-- 空状态 -->
+    <div v-else-if="store.filteredTemplates.length === 0 && !store.isLoading" class="empty-state">
+      <div class="empty-message">
+        <span class="empty-icon">📝</span>
+        <p v-if="store.searchKeyword">未找到匹配的模板</p>
+        <p v-else>暂无模板数据</p>
+        <button @click="store.setSearchKeyword('')" v-if="store.searchKeyword" class="clear-search-btn">
+          清除搜索
+        </button>
       </div>
+    </div>
 
     <!-- 模板列表 -->
     <div v-else class="templates-section">
       <h3>模板列表 ({{ store.filteredTemplates.length }})</h3>
       <div class="templates-grid">
-        <div v-for="template in store.filteredTemplates" :key="template.id" @click="store.selectTemplate(template.id)" :class="{
-          active: store.selectedTemplate?.id === template.id,
-          favorite: template.isFavorite
-        }" class="template-card">
+        <div v-for="template in store.filteredTemplates" :key="template.id" @click="store.selectTemplate(template.id)"
+          :class="{
+            active: store.selectedTemplate?.id === template.id,
+            favorite: template.isFavorite
+          }" class="template-card">
           <div class="template-header">
             <h4>{{ template.title }}</h4>
             <div class="template-actions">
-              <button 
-                @click.stop="handleToggleFavorite(template.id)"
+              <button @click.stop="handleToggleFavorite(template.id)"
                 :class="['favorite-btn', { active: template.isFavorite }]"
-                :disabled="store.toggleFavoriteMutation.isPending.value"
-                :title="template.isFavorite ? '取消收藏' : '添加收藏'"
-              >
-                <span v-if="store.toggleFavoriteMutation.isPending.value && store.toggleFavoriteMutation.variables?.value === template.id">⏳</span>
+                :disabled="store.toggleFavoriteMutation.isPending.value" :title="template.isFavorite ? '取消收藏' : '添加收藏'">
+                <span
+                  v-if="store.toggleFavoriteMutation.isPending.value && store.toggleFavoriteMutation.variables?.value === template.id">⏳</span>
                 <span v-else>{{ template.isFavorite ? '❤️' : '🤍' }}</span>
               </button>
-              <button 
-                @click.stop="handleDeleteTemplate(template.id)"
-                class="delete-btn"
-                :disabled="store.deleteTemplateMutation.isPending.value"
-                title="删除模板"
-              >
-                <span v-if="store.deleteTemplateMutation.isPending.value && store.deleteTemplateMutation.variables?.value === template.id">⏳</span>
+              <button @click.stop="handleDeleteTemplate(template.id)" class="delete-btn"
+                :disabled="store.deleteTemplateMutation.isPending.value" title="删除模板">
+                <span
+                  v-if="store.deleteTemplateMutation.isPending.value && store.deleteTemplateMutation.variables?.value === template.id">⏳</span>
                 <span v-else>🗑️</span>
               </button>
             </div>
@@ -242,7 +215,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, watch, ref } from 'vue'
-import { useTemplateQueryStore } from '../stores/templateQuery'
+import { useTemplateStore } from '../stores/template'
 import { useInitializeDatabaseMutation, useImportTemplatesMutation } from '../composables/useDatabase'
 import { DatabaseService } from '../services/database'
 import type { CategoryView, Template } from '../types'
@@ -251,7 +224,7 @@ import type { CategoryView, Template } from '../types'
 const searchInput = ref('')
 let searchTimeout: number | null = null
 
-const store = useTemplateQueryStore()
+const store = useTemplateStore()
 
 // 数据库初始化
 const initDatabaseMutation = useInitializeDatabaseMutation()
@@ -273,7 +246,7 @@ watch(searchInput, (newValue) => {
   if (searchTimeout) {
     clearTimeout(searchTimeout)
   }
-  
+
   searchTimeout = setTimeout(() => {
     store.setSearchKeyword(newValue)
   }, 300) // 300ms 防抖
@@ -300,7 +273,7 @@ onMounted(async () => {
   try {
     // 初始化搜索输入框
     searchInput.value = store.searchKeyword
-    
+
     console.log('初始化数据库...')
     await initDatabaseMutation.mutateAsync()
     console.log('数据库初始化完成')
@@ -395,7 +368,7 @@ const exportTemplates = async (exportType: 'all' | 'selected' | 'filtered') => {
   try {
     isExporting.value = true
     let templatesToExport: Template[] = []
-    
+
     switch (exportType) {
       case 'all':
         templatesToExport = store.currentTemplates
@@ -412,12 +385,12 @@ const exportTemplates = async (exportType: 'all' | 'selected' | 'filtered') => {
         templatesToExport = store.filteredTemplates
         break
     }
-    
+
     if (templatesToExport.length === 0) {
       alert('没有可导出的模板')
       return
     }
-    
+
     // 创建导出数据
     const exportData = {
       version: '1.0',
@@ -425,7 +398,7 @@ const exportTemplates = async (exportType: 'all' | 'selected' | 'filtered') => {
       exportType,
       templates: templatesToExport
     }
-    
+
     // 创建下载链接
     const blob = new Blob([JSON.stringify(exportData, null, 2)], {
       type: 'application/json'
@@ -438,7 +411,7 @@ const exportTemplates = async (exportType: 'all' | 'selected' | 'filtered') => {
     link.click()
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
-    
+
     console.log(`成功导出 ${templatesToExport.length} 个模板`)
   } catch (error) {
     console.error('导出模板失败:', error)
@@ -461,30 +434,30 @@ const importTemplates = () => {
 const handleFileSelect = async (event: Event) => {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
-  
+
   if (!file) return
-  
+
   try {
     isImporting.value = true
-    
+
     // 验证文件类型
     if (!file.name.endsWith('.json')) {
       alert('请选择JSON格式的文件')
       return
     }
-    
+
     // 读取文件内容
     const text = await file.text()
     const importData = JSON.parse(text)
-    
+
     // 验证数据格式
     if (!importData.templates || !Array.isArray(importData.templates)) {
       alert('文件格式不正确，缺少templates数组')
       return
     }
-    
+
     const templates = importData.templates as Template[]
-    
+
     // 基本验证模板数据
     for (const template of templates) {
       if (!template.id || !template.title || !template.sections) {
@@ -492,17 +465,17 @@ const handleFileSelect = async (event: Event) => {
         return
       }
     }
-    
+
     // 确认导入
     const confirmMessage = `确定要导入 ${templates.length} 个模板吗？\n导入类型: ${importData.exportType || '未知'}\n导出时间: ${importData.exportTime || '未知'}`
     if (!confirm(confirmMessage)) {
       return
     }
-    
+
     // 执行导入
     await importTemplatesMutation.mutateAsync(templates)
     alert(`成功导入 ${templates.length} 个模板`)
-    
+
   } catch (error) {
     console.error('导入模板失败:', error)
     if (error instanceof SyntaxError) {
@@ -594,9 +567,12 @@ const handleFileSelect = async (event: Event) => {
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -1030,8 +1006,13 @@ const handleFileSelect = async (event: Event) => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* 错误状态 */

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
-import { computed, type Ref } from 'vue'
+import { computed, type MaybeRef, Ref } from 'vue'
 import { DatabaseService } from '../services/database'
-import type { Template, Disease, TemplateType, Tag } from '../types'
+import type { Template, Tag } from '../types'
 
 /**
  * 查询键常量
@@ -18,12 +18,13 @@ export const QUERY_KEYS = {
 /**
  * 获取所有模板的查询钩子
  */
-export function useTemplatesQuery() {
+export function useTemplatesQuery(enabled: MaybeRef<boolean> = true) {
   return useQuery({
     queryKey: QUERY_KEYS.templates,
     queryFn: () => DatabaseService.getAllTemplates(),
-    staleTime: 5 * 60 * 1000, // 5分钟内数据被认为是新鲜的
-    gcTime: 10 * 60 * 1000, // 10分钟后清理缓存
+    // staleTime: 5 * 60 * 1000,
+    // gcTime: 10 * 60 * 1000,
+    enabled,
   })
 }
 
@@ -35,8 +36,8 @@ export function useTemplateQuery(id: string) {
     queryKey: QUERY_KEYS.template(id),
     queryFn: () => DatabaseService.getTemplateById(id),
     enabled: !!id, // 只有当id存在时才执行查询
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    // staleTime: 5 * 60 * 1000,
+    // gcTime: 10 * 60 * 1000,
   })
 }
 
@@ -48,8 +49,8 @@ export function useSearchTemplatesQuery(keyword: Ref<string>) {
     queryKey: computed(() => QUERY_KEYS.search(keyword.value)),
     queryFn: () => DatabaseService.searchTemplates(keyword.value),
     enabled: computed(() => !!keyword.value && keyword.value.trim().length > 0), // 只有当关键词存在时才执行查询
-    staleTime: 2 * 60 * 1000, // 搜索结果2分钟内有效
-    gcTime: 5 * 60 * 1000,
+    // staleTime: 2 * 60 * 1000, // 搜索结果2分钟内有效
+    // gcTime: 5 * 60 * 1000,
   })
 }
 
@@ -60,8 +61,8 @@ export function useDiseasesQuery() {
   return useQuery({
     queryKey: QUERY_KEYS.diseases,
     queryFn: () => DatabaseService.getAllDiseases(),
-    staleTime: 10 * 60 * 1000, // 疾病分类变化较少，10分钟内有效
-    gcTime: 30 * 60 * 1000,
+    // staleTime: 10 * 60 * 1000, // 疾病分类变化较少，10分钟内有效
+    // gcTime: 30 * 60 * 1000,
   })
 }
 
@@ -72,8 +73,8 @@ export function useTemplateTypesQuery() {
   return useQuery({
     queryKey: QUERY_KEYS.templateTypes,
     queryFn: () => DatabaseService.getAllTemplateTypes(),
-    staleTime: 10 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
+    // staleTime: 10 * 60 * 1000,
+    // gcTime: 30 * 60 * 1000,
   })
 }
 
@@ -84,8 +85,8 @@ export function useTagsQuery() {
   return useQuery({
     queryKey: QUERY_KEYS.tags,
     queryFn: () => DatabaseService.getAllTags(),
-    staleTime: 10 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
+    // staleTime: 10 * 60 * 1000,
+    // gcTime: 30 * 60 * 1000,
   })
 }
 
@@ -102,6 +103,7 @@ export function useSaveTemplateMutation() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.templates })
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.diseases })
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.templateTypes })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags })
     },
   })
 }
@@ -134,6 +136,7 @@ export function useToggleFavoriteMutation() {
     mutationFn: (id: string) => DatabaseService.toggleTemplateFavorite(id),
     onSuccess: (_, templateId) => {
       // 收藏状态变更后，使相关查询失效
+      console.log('收藏状态变更成功', templateId)
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.template(templateId) })
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.templates })
     },
@@ -170,12 +173,12 @@ export function useInitializeDatabaseMutation() {
         await DatabaseService.initSampleData()
         console.log('数据库样本数据初始化成功')
       }
-      console.log('数据库初始化成功')
       return '数据库初始化成功'
     },
     onSuccess: () => {
       // 初始化完成后，清除所有缓存并重新获取数据
       queryClient.clear()
+      console.log('数据库初始化成功')
     },
   })
 }

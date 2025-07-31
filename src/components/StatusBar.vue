@@ -31,7 +31,7 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
-import { useTemplateStore } from '../stores/template'
+import { useTemplateStore } from '../stores/template.ts'
 import { useInitializeDatabaseMutation } from '../composables/useDatabase'
 
 const templateStore = useTemplateStore()
@@ -44,7 +44,7 @@ let timeInterval: number | null = null
 // 计算属性
 const selectedTemplate = computed(() => templateStore.selectedTemplate)
 const filteredCount = computed(() => templateStore.filteredTemplates.length)
-const totalCount = computed(() => templateStore.templates.length)
+const totalCount = computed(() => templateStore.templates?.length || 0)
 
 /**
  * 数据库连接状态

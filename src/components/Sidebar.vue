@@ -13,7 +13,7 @@
     </div>
 
     <!-- 可滚动的内容区域 -->
-    <div class="category-content" ref="categoryContentRef">
+    <div v-if="!isLoading && templates" class="category-content" ref="categoryContentRef">
       <!-- 按病种分类 -->
       <div class="category-view" :class="{ active: currentView === 'disease' }" v-if="currentView === 'disease'">
         <div class="category-items">
@@ -54,19 +54,21 @@ import { computed, ref } from 'vue'
 import { useTemplateStore } from '../stores/template'
 import type { CategoryView } from '../types'
 import CategoryItem from './common/CategoryItem.vue'
+import { storeToRefs } from 'pinia'
 
 const templateStore = useTemplateStore()
+const { currentView, selectedCategory, diseases, templateTypes, tags, templates, isLoading } = storeToRefs(templateStore)
 
 // 模板引用
 const categoryContentRef = ref<HTMLElement>()
 
 // 计算属性
-const currentView = computed(() => templateStore.currentView)
-const selectedCategory = computed(() => templateStore.selectedCategory)
-const diseases = computed(() => templateStore.diseases)
-const templateTypes = computed(() => templateStore.templateTypes)
-const tags = computed(() => templateStore.tags)
-const templates = computed(() => templateStore.templates)
+// const currentView = computed(() => templateStore.currentView)
+// const selectedCategory = computed(() => templateStore.selectedCategory)
+// const diseases = computed(() => templateStore.diseases)
+// const templateTypes = computed(() => templateStore.templateTypes)
+// const tags = computed(() => templateStore.tags)
+// const templates = computed(() => templateStore.templates)
 
 
 
@@ -88,7 +90,7 @@ const handleCategorySelect = (categoryId: string) => {
  * 获取标签对应的模板数量
  */
 const getTagTemplateCount = (tagId: string) => {
-  return templates.value.filter(template => template.tags.includes(tagId)).length
+  return templates.value?.filter(template => template.tags?.includes(tagId)).length || 0
 }
 
 </script>
