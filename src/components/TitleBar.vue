@@ -11,11 +11,12 @@
       </div>
     </div>
     <div class="window-controls">
-      <BaseButton variant="secondary" size="small" icon="mdi:pin" class="pin-btn" @click="handleWindowAction('pin')" />
+      <BaseButton variant="secondary" size="small" :icon="isAlwaysOnTop ? 'mdi:pin' : 'mdi:pin-outline'" class="pin-btn"
+        :class="{ active: isAlwaysOnTop }" @click="handleWindowAction('pin')" />
       <BaseButton variant="secondary" size="small" icon="mdi:minus" class="minimize-btn"
         @click="handleWindowAction('minimize')" />
-      <BaseButton variant="secondary" size="small" icon="mdi:fullscreen" class="maximize-btn"
-        @click="handleWindowAction('maximize')" />
+      <BaseButton variant="secondary" size="small" :icon="isMaximized ? 'mdi:fullscreen-exit' : 'mdi:fullscreen'"
+        class="maximize-btn" @click="handleWindowAction('maximize')" />
       <BaseButton variant="danger" size="small" icon="mdi:close" class="close-btn"
         @click="handleWindowAction('close')" />
     </div>
@@ -23,6 +24,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import BaseButton from './common/BaseButton.vue'
 import MenuDropdown from './common/MenuDropdown.vue'
@@ -31,6 +33,30 @@ import { useResetTagsMutation } from '@/composables/useDatabase'
 
 const templateStore = useTemplateStore();
 const resetTagsMutation = useResetTagsMutation();
+
+// 窗口状态
+const isAlwaysOnTop = ref(false)
+const isMaximized = ref(false)
+
+/**
+ * 初始化窗口状态
+ */
+const initWindowState = async () => {
+  try {
+    const appWindow = getCurrentWindow()
+    isAlwaysOnTop.value = await appWindow.isAlwaysOnTop()
+    isMaximized.value = await appWindow.isMaximized()
+  } catch (error) {
+    console.error('获取窗口状态失败:', error)
+  }
+}
+
+/**
+ * 组件挂载时初始化窗口状态
+ */
+onMounted(() => {
+  initWindowState()
+})
 
 // 菜单数据定义
 const fileMenuItems = [
@@ -108,13 +134,17 @@ const handleWindowAction = async (action: string) => {
         break
       case 'maximize':
         await appWindow.toggleMaximize()
+        // 更新最大化状态
+        isMaximized.value = await appWindow.isMaximized()
         break
       case 'close':
         await appWindow.close()
         break
       case 'pin':
-        const isAlwaysOnTop = await appWindow.isAlwaysOnTop()
-        await appWindow.setAlwaysOnTop(!isAlwaysOnTop)
+        const currentPinState = await appWindow.isAlwaysOnTop()
+        await appWindow.setAlwaysOnTop(!currentPinState)
+        // 更新置顶状态
+        isAlwaysOnTop.value = !currentPinState
         break
     }
   } catch (error) {
@@ -189,5 +219,14 @@ const handleWindowAction = async (action: string) => {
 .window-controls {
   display: flex;
   gap: 8px;
+}
+
+.pin-btn.active {
+  background-color: var(--doc-primary) !important;
+  color: white !important;
+}
+
+.pin-btn.active:hover {
+  background-color: var(--doc-primary-hover) !important;
 }
 </style>

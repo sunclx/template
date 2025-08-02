@@ -7,6 +7,7 @@
         error: initializeDatabase.isError.value
       }"></div>
       <span>{{ connectionText }}</span>
+      <span class="separator">|</span>
     </div>
 
     <div class="template-info">
@@ -22,9 +23,10 @@
     </div>
 
     <div class="system-info">
+      <span class="separator">|</span>
       <span>{{ currentTime }}</span>
       <span class="separator">|</span>
-      <span>医疗模板管理系统 v1.0.0</span>
+      <span>模板管理 v1.0.0</span>
     </div>
   </div>
 </template>
@@ -77,8 +79,7 @@ const updateTime = () => {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
+    minute: '2-digit'
   })
 }
 
@@ -102,7 +103,7 @@ onMounted(() => {
   timeInterval = window.setInterval(() => {
     updateTime()
     checkConnection()
-  }, 5000)
+  }, 60 * 1000)
 })
 
 onUnmounted(() => {
