@@ -4,7 +4,7 @@
       'tag',
       `tag--${getTagType(tag.name, index)}`
     ]" :style="getTagStyle(tag.name)">
-      <i v-if="showIcon" :class="getTagIcon(tag.name)" class="tag__icon"></i>
+      <Icon v-if="showIcon" :icon="getTagIcon(tag.name)" class="tag__icon" />
       {{ tag.name }}
     </span>
     <span v-if="hasMoreTags" class="tag tag--more" :title="moreTagsTooltip">
@@ -15,6 +15,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import Icon from './Icon.vue'
+
 interface Tag {
   name: string
   type: 'default' | 'type' | 'category'
@@ -101,14 +103,14 @@ const getTagType = (tagName: string, index: number): string => {
 const getTagIcon = (tagName: string): string => {
   // 首先查找对应的标签对象
   const tagObj = props.tags.find(tag => tag.name === tagName)
-  
+
   // 如果标签对象有自定义图标，使用自定义图标
   if (tagObj && tagObj.icon) {
     return tagObj.icon
   }
-  
-  // 默认使用fa-tag图标
-  return 'fas fa-tag'
+
+  // 默认使用tag图标
+  return 'mdi:tag'
 }
 
 /**
@@ -119,7 +121,7 @@ const getTagIcon = (tagName: string): string => {
 const getTagStyle = (tagName: string) => {
   const tagObj = props.tags.find(tag => tag.name === tagName)
   const style: Record<string, string> = {}
-  
+
   // 优先使用标签对象的color属性
   if (tagObj && tagObj.color) {
     style.color = tagObj.color
@@ -128,7 +130,7 @@ const getTagStyle = (tagName: string) => {
   else if (props.colorMap && props.colorMap[tagName]) {
     style.color = props.colorMap[tagName]
   }
-  
+
   return style
 }
 </script>

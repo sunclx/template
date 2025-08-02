@@ -4,7 +4,7 @@
     <TemplateEditMode v-if="isEditing" />
     <!-- 空状态 -->
     <div v-else-if="!selectedTemplate" class="empty-state">
-      <i class="fas fa-file-medical"></i>
+      <Icon icon="mdi:file-document-plus" />
       <div class="empty-title">请选择模板</div>
       <div class="empty-desc">从左侧列表中选择一个模板来查看详细内容</div>
     </div>
@@ -18,6 +18,7 @@ import { watch, toRef } from 'vue'
 import { useTemplateStore } from '../stores/template'
 import TemplateEditMode from './TemplateEditMode.vue'
 import TemplateViewMode from './TemplateViewMode.vue'
+import Icon from './common/Icon.vue'
 
 const templateStore = useTemplateStore()
 

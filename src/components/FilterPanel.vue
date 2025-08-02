@@ -38,7 +38,7 @@
           全部病种
         </div>
         <div v-for="disease in diseases" :key="disease.name" class="filter-option"
-          :class="{ active: filterOptions.disease && filterOptions.disease.includes(disease.name) }" 
+          :class="{ active: filterOptions.disease && filterOptions.disease.includes(disease.name) }"
           @click="toggleDiseaseFilter(disease.name)">
           {{ disease.name }}
         </div>
@@ -49,7 +49,8 @@
     <div class="filter-group">
       <div class="filter-title">模板类型</div>
       <div class="filter-options">
-        <div class="filter-option" :class="{ active: !filterOptions.templateType || filterOptions.templateType.length === 0 }"
+        <div class="filter-option"
+          :class="{ active: !filterOptions.templateType || filterOptions.templateType.length === 0 }"
           @click="setFilter('templateType', [])">
           全部类型
         </div>
@@ -72,7 +73,7 @@
         <div v-for="tag in tags.filter(t => t.name !== 'all')" :key="tag.name" class="filter-option tag-option"
           :class="{ active: filterOptions.tags && filterOptions.tags.includes(tag.name) }"
           @click="toggleTagFilter(tag.name)">
-          <i class="fas fa-tag" :style="{ color: tag.color }"></i>
+          <Icon icon="mdi:tag" :style="{ color: tag.color }" />
           {{ tag.name }}
         </div>
       </div>
@@ -106,6 +107,7 @@
 
 <script setup lang="ts">
 import BaseButton from './common/BaseButton.vue'
+import Icon from './common/Icon.vue'
 
 // 定义props
 interface Props {
@@ -116,7 +118,7 @@ interface Props {
   tags: any[]
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 
 // 定义emits
 interface Emits {

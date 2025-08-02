@@ -1,19 +1,15 @@
 <template>
-  <button 
-    :class="[
-      'base-button',
-      `base-button--${variant}`,
-      `base-button--${size}`,
-      {
-        'base-button--disabled': disabled,
-        'base-button--loading': loading
-      }
-    ]"
-    :disabled="disabled || loading"
-    @click="handleClick"
-  >
-    <i v-if="icon && !loading" :class="icon" class="base-button__icon"></i>
-    <i v-if="loading" class="fas fa-spinner fa-spin base-button__icon"></i>
+  <button :class="[
+    'base-button',
+    `base-button--${variant}`,
+    `base-button--${size}`,
+    {
+      'base-button--disabled': disabled,
+      'base-button--loading': loading
+    }
+  ]" :disabled="disabled || loading" @click="handleClick">
+    <Icon v-if="icon && !loading" :icon="icon" class="base-button__icon" />
+    <Icon v-if="loading" icon="mdi:loading" class="base-button__icon base-button__icon--spin" />
     <span v-if="$slots.default" class="base-button__text">
       <slot></slot>
     </span>
@@ -21,6 +17,7 @@
 </template>
 
 <script setup lang="ts">
+import Icon from '@/components/common/Icon.vue';
 interface Props {
   variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning'
   size?: 'small' | 'medium' | 'large'
@@ -160,6 +157,20 @@ const handleClick = (event: MouseEvent) => {
 
 .base-button__icon {
   font-size: 0.9em;
+}
+
+.base-button__icon--spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .base-button__text {

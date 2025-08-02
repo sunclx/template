@@ -6,12 +6,8 @@
     <div v-if="isActive" class="dropdown-menu">
       <template v-for="item in menuItems" :key="item.key">
         <div v-if="item.divider" class="dropdown-divider"></div>
-        <div 
-          v-else
-          class="dropdown-item"
-          @click="handleItemClick(item)"
-        >
-          <i v-if="item.icon" :class="item.icon" class="item-icon"></i>
+        <div v-else class="dropdown-item" @click="handleItemClick(item)">
+          <Icon v-if="item.icon" :icon="item.icon" class="item-icon" />
           <span class="item-text">{{ item.label }}</span>
           <span v-if="item.shortcut" class="item-shortcut">{{ item.shortcut }}</span>
         </div>
@@ -22,6 +18,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import Icon from './Icon.vue'
 
 interface MenuItem {
   key: string

@@ -6,7 +6,7 @@
     }
   ]" @click="handleClick">
     <span class="category-item__content">
-      <i v-if="icon" :class="icon" :style="iconStyle" class="category-item__icon"></i>
+      <Icon v-if="icon" :icon="icon" :style="iconStyle" class="category-item__icon" />
       <span class="category-item__text">{{ label }}</span>
     </span>
     <span v-if="count !== undefined" class="category-item__badge">
@@ -17,6 +17,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import Icon from './Icon.vue'
 
 interface Props {
   label: string

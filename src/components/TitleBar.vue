@@ -11,13 +11,13 @@
       </div>
     </div>
     <div class="window-controls">
-      <BaseButton variant="secondary" size="small" icon="fas fa-thumbtack" class="pin-btn"
+      <BaseButton variant="secondary" size="small" icon="mdi:pin" class="pin-btn"
         @click="handleWindowAction('pin')" />
-      <BaseButton variant="secondary" size="small" icon="fas fa-minus" class="minimize-btn"
+      <BaseButton variant="secondary" size="small" icon="mdi:minus" class="minimize-btn"
         @click="handleWindowAction('minimize')" />
-      <BaseButton variant="secondary" size="small" icon="fas fa-expand" class="maximize-btn"
+      <BaseButton variant="secondary" size="small" icon="mdi:fullscreen" class="maximize-btn"
         @click="handleWindowAction('maximize')" />
-      <BaseButton variant="danger" size="small" icon="fas fa-times" class="close-btn"
+      <BaseButton variant="danger" size="small" icon="mdi:close" class="close-btn"
         @click="handleWindowAction('close')" />
     </div>
   </div>
@@ -35,48 +35,48 @@ const resetTagsMutation = useResetTagsMutation();
 
 // 菜单数据定义
 const fileMenuItems = [
-  { key: 'new', label: '新建模板', icon: 'fas fa-file-plus', shortcut: 'Ctrl+N' },
-  { key: 'open', label: '打开模板', icon: 'fas fa-folder-open', shortcut: 'Ctrl+O' },
-  { key: 'reset-tags', label: '重置标签', icon: 'fas fa-undo' },
-  { key: 'save', label: '保存', icon: 'fas fa-save', shortcut: 'Ctrl+S' },
-  { key: 'save-as', label: '另存为', icon: 'fas fa-save', shortcut: 'Ctrl+Shift+S' },
+  { key: 'new', label: '新建模板', icon: 'mdi:file-plus', shortcut: 'Ctrl+N' },
+  { key: 'open', label: '打开模板', icon: 'mdi:folder-open', shortcut: 'Ctrl+O' },
+  { key: 'reset-tags', label: '重置标签', icon: 'mdi:undo' },
+  { key: 'save', label: '保存', icon: 'mdi:content-save', shortcut: 'Ctrl+S' },
+  { key: 'save-as', label: '另存为', icon: 'mdi:content-save-outline', shortcut: 'Ctrl+Shift+S' },
   { key: 'divider1', label: '', divider: true },
-  { key: 'import', label: '导入模板', icon: 'fas fa-file-import' },
-  { key: 'export', label: '导出模板', icon: 'fas fa-file-export' },
+  { key: 'import', label: '导入模板', icon: 'mdi:file-import', shortcut: 'Ctrl+O' },
+  { key: 'export', label: '导出模板', icon: 'mdi:file-export', shortcut: 'Ctrl+E' },
   { key: 'divider2', label: '', divider: true },
-  { key: 'exit', label: '退出', icon: 'fas fa-sign-out-alt', shortcut: 'Alt+F4' }
+  { key: 'exit', label: '退出', icon: 'mdi:exit-to-app', shortcut: 'Alt+F4' }
 ]
 
 const editMenuItems = [
-  { key: 'undo', label: '撤销', icon: 'fas fa-undo', shortcut: 'Ctrl+Z' },
-  { key: 'redo', label: '重做', icon: 'fas fa-redo', shortcut: 'Ctrl+Y' },
+  { key: 'undo', label: '撤销', icon: 'mdi:undo', shortcut: 'Ctrl+Z' },
+  { key: 'redo', label: '重做', icon: 'mdi:redo', shortcut: 'Ctrl+Y' },
   { key: 'divider1', label: '', divider: true },
-  { key: 'cut', label: '剪切', icon: 'fas fa-cut', shortcut: 'Ctrl+X' },
-  { key: 'copy', label: '复制', icon: 'fas fa-copy', shortcut: 'Ctrl+C' },
-  { key: 'paste', label: '粘贴', icon: 'fas fa-paste', shortcut: 'Ctrl+V' },
+  { key: 'cut', label: '剪切', icon: 'mdi:content-cut', shortcut: 'Ctrl+X' },
+  { key: 'copy', label: '复制', icon: 'mdi:content-copy', shortcut: 'Ctrl+C' },
+  { key: 'paste', label: '粘贴', icon: 'mdi:content-paste', shortcut: 'Ctrl+V' },
   { key: 'divider2', label: '', divider: true },
-  { key: 'select-all', label: '全选', icon: 'fas fa-check-square', shortcut: 'Ctrl+A' },
-  { key: 'find', label: '查找', icon: 'fas fa-search', shortcut: 'Ctrl+F' }
+  { key: 'select-all', label: '全选', icon: 'mdi:select-all', shortcut: 'Ctrl+A' },
+  { key: 'find', label: '查找', icon: 'mdi:magnify', shortcut: 'Ctrl+F' }
 ]
 
 const viewMenuItems = [
-  { key: 'queryExample', label: 'TanStack Query 示例', icon: 'fas fa-sync-alt' },
-  { key: 'refresh', label: '刷新', icon: 'fas fa-sync-alt', shortcut: 'F5' },
+  { key: 'queryExample', label: 'TanStack Query 示例', icon: 'mdi:refresh' },
+  { key: 'refresh', label: '刷新', icon: 'mdi:refresh', shortcut: 'F5' },
   { key: 'divider1', label: '', divider: true },
-  { key: 'sidebar', label: '侧边栏', icon: 'fas fa-bars' },
-  { key: 'status-bar', label: '状态栏', icon: 'fas fa-info-circle' },
+  { key: 'sidebar', label: '侧边栏', icon: 'mdi:menu' },
+  { key: 'status-bar', label: '状态栏', icon: 'mdi:information' },
   { key: 'divider2', label: '', divider: true },
-  { key: 'zoom-in', label: '放大', icon: 'fas fa-search-plus', shortcut: 'Ctrl++' },
-  { key: 'zoom-out', label: '缩小', icon: 'fas fa-search-minus', shortcut: 'Ctrl+-' },
-  { key: 'zoom-reset', label: '重置缩放', icon: 'fas fa-search', shortcut: 'Ctrl+0' }
+  { key: 'zoom-in', label: '放大', icon: 'mdi:magnify-plus', shortcut: 'Ctrl++' },
+  { key: 'zoom-out', label: '缩小', icon: 'mdi:magnify-minus', shortcut: 'Ctrl+-' },
+  { key: 'zoom-reset', label: '重置缩放', icon: 'mdi:magnify', shortcut: 'Ctrl+0' }
 ]
 
 const helpMenuItems = [
-  { key: 'help', label: '帮助文档', icon: 'fas fa-question-circle', shortcut: 'F1' },
-  { key: 'shortcuts', label: '快捷键', icon: 'fas fa-keyboard' },
+  { key: 'help', label: '帮助文档', icon: 'mdi:help-circle', shortcut: 'F1' },
+  { key: 'shortcuts', label: '快捷键', icon: 'mdi:keyboard' },
   { key: 'divider1', label: '', divider: true },
-  { key: 'feedback', label: '反馈建议', icon: 'fas fa-comment' },
-  { key: 'about', label: '关于', icon: 'fas fa-info-circle' }
+  { key: 'feedback', label: '反馈建议', icon: 'mdi:comment' },
+  { key: 'about', label: '关于', icon: 'mdi:information' }
 ]
 
 /**

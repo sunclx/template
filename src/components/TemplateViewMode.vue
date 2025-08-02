@@ -6,9 +6,9 @@
       <div class="title-row">
         <div class="detail-title">{{ template.title }}</div>
         <div class="title-actions">
-          <BaseButton variant="secondary" size="small" icon="fas fa-edit" @click="handleEdit" title="编辑模板" />
-          <BaseButton variant="secondary" size="small" icon="fas fa-copy" @click="handleCopy" title="复制" />
-          <BaseButton variant="secondary" size="small" icon="fas fa-star"
+          <BaseButton variant="secondary" size="small" icon="mdi:pencil" @click="handleEdit" title="编辑模板" />
+          <BaseButton variant="secondary" size="small" icon="mdi:content-copy" @click="handleCopy" title="复制" />
+          <BaseButton variant="secondary" size="small" icon="mdi:star"
             :class="{ 'favorite-active': template.isFavorite }" @click="handleToggleFavorite"
             :title="template.isFavorite ? '取消收藏' : '收藏'" />
         </div>
@@ -25,10 +25,10 @@
           <div v-for="(section, index) in template.sections" :key="index" class="template-section">
             <div class="section-title">
               <div class="section-title-left">
-                <i class="fas fa-file-alt"></i>
+                <Icon icon="mdi:file-document-outline" />
                 <span>{{ section.title }}</span>
               </div>
-              <BaseButton variant="secondary" size="small" icon="fas fa-copy"
+              <BaseButton variant="secondary" size="small" icon="mdi:content-copy"
                 @click="copySectionContent(section.content)" title="复制此部分内容" />
             </div>
             <div class="section-content">
@@ -49,11 +49,12 @@ import { useTemplateStore } from '../stores/template'
 import BaseButton from './common/BaseButton.vue'
 import TagList from './common/TagList.vue'
 import TemplateMeta from './common/TemplateMeta.vue'
+import Icon from './common/Icon.vue'
 import type { Template } from '../types'
 import { storeToRefs } from 'pinia'
 
 const templateStore = useTemplateStore()
-const {selectedTemplate:template }=storeToRefs(templateStore)
+const { selectedTemplate: template } = storeToRefs(templateStore)
 
 /**
  * 开始编辑
@@ -122,14 +123,14 @@ const getDetailTemplateTags = (template: Template) => {
   result.push({
     name: template.disease,
     type: 'category',
-    icon: 'fas fa-stethoscope'
+    icon: 'mdi:stethoscope'
   })
 
   // 添加模板类型标签
   result.push({
     name: template.templateType,
     type: 'type',
-    icon: 'fas fa-file-medical'
+    icon: 'mdi:file-document-plus'
   })
 
   // 添加其他标签
@@ -137,7 +138,7 @@ const getDetailTemplateTags = (template: Template) => {
     result.push({
       name: tagId,
       type: 'default',
-      icon: 'fas fa-tag',
+      icon: 'mdi:tag',
       color: templateStore.getTagColor(tagId)
     })
   })

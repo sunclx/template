@@ -5,10 +5,10 @@
       <div class="title-row">
         <input v-model="template.title" class="detail-title-input" placeholder="请输入模板标题" />
         <div class="title-actions">
-          <BaseButton size="small" icon="fas fa-save" @click="handleSave" title="保存" />
-          <BaseButton variant="secondary" size="small" icon="fas fa-times" @click="handleCancel" title="取消" />
-          <BaseButton variant="secondary" size="small" icon="fas fa-copy" @click="handleCopy" title="复制" />
-          <BaseButton variant="secondary" size="small" icon="fas fa-star"
+          <BaseButton size="small" icon="mdi:content-save" @click="handleSave" title="保存" />
+          <BaseButton variant="secondary" size="small" icon="mdi:close" @click="handleCancel" title="取消" />
+          <BaseButton variant="secondary" size="small" icon="mdi:content-copy" @click="handleCopy" title="复制" />
+          <BaseButton variant="secondary" size="small" icon="mdi:star"
             :class="{ 'favorite-active': template.isFavorite }" @click="handleToggleFavorite"
             :title="template.isFavorite ? '取消收藏' : '收藏'" />
         </div>
@@ -32,7 +32,7 @@
             <!-- 已选择的标签 -->
             <div v-for="tagName in template.tags" :key="tagName" class="tag-item">
               <span>{{ tagName }}</span>
-              <i class="fas fa-times" @click="removeTag(tagName)"></i>
+              <Icon icon="mdi:close" @click="removeTag(tagName)" />
             </div>
             <!-- 添加标签输入框 -->
             <input type="text" class="add-tag-input" placeholder="添加标签..." v-model="newTagInput"
@@ -45,7 +45,7 @@
           <div class="available-tags">
             <span v-for="tag in filteredAvailableTags" :key="tag.name" class="available-tag"
               :style="{ color: tag.color }" @click="addTag(tag.name)">
-              <i class="fas fa-tag"></i> {{ tag.name }}
+              <Icon icon="mdi:tag" /> {{ tag.name }}
             </span>
           </div>
         </div>
@@ -61,10 +61,10 @@
             ghost-class="ghost-section" chosen-class="chosen-section" drag-class="drag-section">
             <div v-for="(section, index) in template.sections" :key="index" class="template-section draggable-section">
               <div class="section-title">
-                <i class="fas fa-grip-vertical drag-handle"></i>
-                <i class="fas fa-file-alt"></i>
+                <Icon icon="mdi:drag-vertical" class="drag-handle" />
+                <Icon icon="mdi:file-document-outline" />
                 <input v-model="section.title" class="section-title-input" placeholder="输入部分标题" />
-                <BaseButton variant="danger" size="small" icon="fas fa-trash" @click="removeSection(index)"
+                <BaseButton variant="danger" size="small" icon="mdi:delete" @click="removeSection(index)"
                   title="删除此部分" />
               </div>
               <div class="section-content">
@@ -76,7 +76,7 @@
 
           <!-- 添加新部分按钮 -->
           <div class="add-section-container">
-            <BaseButton icon="fas fa-plus" @click="addSection">
+            <BaseButton icon="mdi:plus" @click="addSection">
               添加新部分
             </BaseButton>
           </div>
@@ -93,6 +93,7 @@
 import BaseButton from './common/BaseButton.vue'
 import SelectDropdown from './common/SelectDropdown.vue'
 import TemplateMeta from './common/TemplateMeta.vue'
+import Icon from './common/Icon.vue'
 
 import { computed, ref, watch, toRaw } from 'vue'
 import { storeToRefs } from 'pinia'

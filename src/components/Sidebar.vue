@@ -41,7 +41,7 @@
           <CategoryItem label="全部" :count="templates.length" :active="selectedCategory === 'all'" value="all"
             @click="handleCategorySelect" />
           <CategoryItem v-for="tag in tags" :key="tag.name" :label="tag.name" :count="tag.template_count"
-            :active="selectedCategory === tag.name" :value="tag.name" icon="fas fa-tag"
+            :active="selectedCategory === tag.name" :value="tag.name" icon="mdi:tag"
             :icon-color="tag.color || randomColor()" @click="handleCategorySelect" />
         </div>
       </div>

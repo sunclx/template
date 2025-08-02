@@ -3,13 +3,13 @@
     <!-- 列表头部 -->
     <div class="list-header">
       <div class="search-container">
-        <i class="fas fa-search"></i>
+        <Icon icon="mdi:magnify" />
         <input type="text" class="search-input" placeholder="搜索模板..." v-model="searchKeyword" @input="handleSearch" />
       </div>
       <div class="header-actions">
-        <BaseButton icon="fas fa-plus" @click="handleAddTemplate">
+        <BaseButton icon="mdi:plus" @click="handleAddTemplate">
         </BaseButton>
-        <BaseButton variant="secondary" icon="fas fa-filter" @click="toggleFilterPanel">
+        <BaseButton variant="secondary" icon="mdi:filter" @click="toggleFilterPanel">
           筛选
         </BaseButton>
       </div>
@@ -31,7 +31,7 @@
             <div class="template-title">{{ template.title }}</div>
             <button class="favorite-btn" :class="{ active: template.isFavorite }"
               @click.stop="handleToggleFavorite(template.id)">
-              <i class="fas fa-star"></i>
+              <Icon icon="mdi:star" />
             </button>
           </div>
         </template>
@@ -53,7 +53,7 @@
 
       <!-- 空状态 -->
       <div v-if="filteredTemplates.length === 0" class="empty-state">
-        <i class="fas fa-file-medical"></i>
+        <Icon icon="mdi:file-document-plus" />
         <div class="empty-title">暂无模板</div>
         <div class="empty-desc">当前分类下没有找到匹配的模板</div>
       </div>
@@ -69,6 +69,7 @@ import { getPinyinInitials, getFullPinyin } from '../utils/pinyin'
 import BaseButton from './common/BaseButton.vue'
 import BaseCard from './common/BaseCard.vue'
 import FilterPanel from './FilterPanel.vue'
+import Icon from './common/Icon.vue'
 import { match } from 'pinyin-pro'
 
 const templateStore = useTemplateStore()
