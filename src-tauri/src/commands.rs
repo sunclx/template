@@ -7,7 +7,7 @@ use tauri::{AppHandle, State};
 pub async fn init_database(
     app_handle: AppHandle,
     state: State<'_, AppState>,
-) -> Result<String, String> {
+) -> Result<(), String> {
     // 检查数据库是否已初始化
     if state
         .db
@@ -15,7 +15,7 @@ pub async fn init_database(
         .map_err(|e| format!("Failed to lock database: {}", e))?
         .is_some()
     {
-        return Ok("Database already initialized".to_string());
+        return Ok(());
     }
 
     match DatabaseManager::new(&app_handle) {
@@ -26,7 +26,7 @@ pub async fn init_database(
                 .lock()
                 .map_err(|e| format!("Failed to lock database: {}", e))?;
             *db = Some(db_manager);
-            Ok("Database initialized successfully".to_string())
+            Ok(())
         }
         Err(e) => Err(format!("Failed to initialize database: {}", e)),
     }
@@ -80,8 +80,8 @@ pub async fn save_template(
 
 /// 导入模板
 #[tauri::command]
-pub async fn import_template(
-    template: Template,
+pub async fn import_templates(
+    templates: Vec<Template>,
     state: State<'_, AppState>,
 ) -> Result<String, String> {
     let mut db = state
@@ -90,9 +90,9 @@ pub async fn import_template(
         .map_err(|e| format!("Failed to lock database: {}", e))?;
     let db_manager = db.as_mut().ok_or("Database not initialized")?;
     db_manager
-        .batch_upsert_templates(&[template])
+        .batch_upsert_templates(&templates)
         .map_err(|e| format!("Database error: {}", e))?;
-    Ok("Template saved successfully".to_string())
+    Ok("Templates saved successfully".to_string())
 }
 
 /// 删除模板
@@ -195,6 +195,20 @@ pub async fn save_tag(tag: Tag, state: State<'_, AppState>) -> Result<String, St
         .upsert_tag(&tag)
         .map_err(|e| format!("Database error: {}", e))?;
     Ok("Tag saved successfully".to_string())
+}
+
+/// 重置标签
+#[tauri::command]
+pub async fn reset_tags(state: State<'_, AppState>) -> Result<String, String> {
+    let mut db = state
+        .db
+        .lock()
+        .map_err(|e| format!("Failed to lock database: {}", e))?;
+    let db_manager = db.as_mut().ok_or("Database not initialized")?;
+    db_manager
+        .reset_tags()
+        .map_err(|e| format!("Database error: {}", e))?;
+    Ok("Tags reset successfully".to_string())
 }
 
 // 初始化示例数据

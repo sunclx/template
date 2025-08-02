@@ -228,7 +228,7 @@ onUnmounted(() => {
 
 .select-input {
   width: 100%;
-  padding: 6px 30px 6px 12px;
+  padding: 4px 8px 4px 8px;
   border: 1px solid #ced4da;
   border-radius: 4px;
   background: white;

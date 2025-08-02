@@ -1,5 +1,6 @@
 <template>
-  <div class="template-view-mode">
+  <div v-if="template" class="template-view-mode">
+
     <!-- 查看模式头部 -->
     <div class="template-detail-header">
       <div class="title-row">
@@ -37,41 +38,22 @@
         </div>
 
         <!-- 元数据信息 -->
-        <div class="template-meta">
-          <div class="meta-row">
-            <div class="meta-item">
-              <span class="meta-label">创建：</span>
-              <span class="meta-value">{{ formatDateTime(template.createdAt) }}</span>
-            </div>
-            <div class="meta-item">
-              <span class="meta-label">更新：</span>
-              <span class="meta-value">{{ formatDateTime(template.updatedAt) }}</span>
-            </div>
-            <div class="meta-item">
-              <span class="meta-label">ID：</span>
-              <span class="meta-value">{{ template.id }}</span>
-            </div>
-          </div>
-        </div>
+        <TemplateMeta :template="template" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, toRef, Ref } from 'vue'
 import { useTemplateStore } from '../stores/template'
 import BaseButton from './common/BaseButton.vue'
 import TagList from './common/TagList.vue'
+import TemplateMeta from './common/TemplateMeta.vue'
 import type { Template } from '../types'
+import { storeToRefs } from 'pinia'
 
 const templateStore = useTemplateStore()
-const template = toRef(templateStore, "selectedTemplate") as Ref<Template>
-
-// 计算属性
-const diseases = computed(() => templateStore.diseases)
-const templateTypes = computed(() => templateStore.templateTypes)
-const tags = computed(() => templateStore.tags)
+const {selectedTemplate:template }=storeToRefs(templateStore)
 
 /**
  * 开始编辑
@@ -104,7 +86,7 @@ const handleCopy = async () => {
  * 切换收藏状态
  */
 const handleToggleFavorite = () => {
-  if (template) {
+  if (template.value) {
     template.value.isFavorite = !template.value.isFavorite
     templateStore.toggleFavorite(template.value.id)
   }
@@ -124,39 +106,6 @@ const copySectionContent = async (content: string) => {
   }
 }
 
-
-/**
- * 获取病种名称
- */
-const getDiseaseName = (diseaseId: string) => {
-  const disease = diseases.value.find(d => d.name === diseaseId)
-  return disease?.name || '未知病种'
-}
-
-/**
- * 获取模板类型名称
- */
-const getTemplateTypeName = (typeId: string) => {
-  const type = templateTypes.value.find(t => t.name === typeId)
-  return type?.name || '未知类型'
-}
-
-/**
- * 获取标签名称
- */
-const getTagName = (tagName: string) => {
-  const tag = tags.value.find(t => t.name === tagName)
-  return tag?.name || '未知标签'
-}
-
-/**
- * 获取标签颜色
- */
-const getTagColor = (tagName: string) => {
-  const tag = tags.value.find(t => t.name === tagName)
-  return tag?.color || '#2e4ab8'
-}
-
 /**
  * 获取详情页模板标签列表（用于TagList组件）
  */
@@ -171,14 +120,14 @@ const getDetailTemplateTags = (template: Template) => {
 
   // 添加病种标签
   result.push({
-    name: getDiseaseName(template.disease),
+    name: template.disease,
     type: 'category',
     icon: 'fas fa-stethoscope'
   })
 
   // 添加模板类型标签
   result.push({
-    name: getTemplateTypeName(template.templateType),
+    name: template.templateType,
     type: 'type',
     icon: 'fas fa-file-medical'
   })
@@ -186,29 +135,17 @@ const getDetailTemplateTags = (template: Template) => {
   // 添加其他标签
   template.tags.forEach((tagId: string) => {
     result.push({
-      name: getTagName(tagId),
+      name: tagId,
       type: 'default',
       icon: 'fas fa-tag',
-      color: getTagColor(tagId)
+      color: templateStore.getTagColor(tagId)
     })
   })
 
   return result
 }
 
-/**
- * 格式化日期时间
- */
-const formatDateTime = (timestamp: number) => {
-  const date = new Date(timestamp)
-  return date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
+
 </script>
 
 <style scoped>
@@ -254,57 +191,19 @@ const formatDateTime = (timestamp: number) => {
 .template-detail-content {
   flex: 1;
   overflow-y: auto;
-  padding: 12px 16px;
+  padding: 8px 8px;
 }
 
 /* .detail-content {
   max-width: 800px;
 } */
 
-.template-meta {
-  background-color: rgba(248, 249, 250, 0.6);
-  border-radius: 6px;
-  padding: 6px 10px;
-  margin-top: 20px;
-  font-size: 11px;
-  opacity: 0.8;
-  border: 1px solid rgba(233, 236, 239, 0.5);
-}
 
-.meta-row {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-  min-width: 100px;
-  background-color: rgba(255, 255, 255, 0.7);
-  padding: 2px 6px;
-  border-radius: 3px;
-}
-
-.meta-label {
-  font-weight: 500;
-  color: rgba(108, 117, 125, 0.8);
-  margin-right: 4px;
-  flex-shrink: 0;
-}
-
-.meta-value {
-  color: rgba(73, 80, 87, 0.8);
-  font-size: 11px;
-  font-weight: normal;
-  font-family: 'Courier New', monospace;
-  font-size: 11px;
-}
 
 .template-sections {
   display: flex;
   flex-direction: column;
-  gap: 25px;
+  gap: 2px;
 }
 
 .template-section {
@@ -334,16 +233,16 @@ const formatDateTime = (timestamp: number) => {
 .section-content {
   color: var(--text-main);
   line-height: 1.6;
-  padding: 0 10px;
+  /* padding: 0 10px; */
 }
 
 .section-content-text {
   white-space: pre-wrap;
   word-wrap: break-word;
   background-color: #edf2ff;
-  padding: 12px 16px;
+  padding: 6px 10px;
   border-radius: 6px;
-  margin: 8px 0;
+  margin: 6px 0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
 }

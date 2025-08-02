@@ -16,7 +16,7 @@
         <div class="search-box">
           <input type="text" v-model="searchInput" placeholder="搜索模板... (支持拼音搜索)" class="search-input">
           <span class="search-icon">🔍</span>
-          <span v-if="store.searchQuery.isFetching.value" class="search-loading">⏳</span>
+          <span v-if="store.searchQuery.isFetching" class="search-loading">⏳</span>
         </div>
 
         <!-- 导入导出按钮 -->
@@ -70,10 +70,10 @@
         <button @click="selectCategory('all')" :class="{ active: selectedCategory === 'all' }" class="category-btn">
           全部 ({{ filteredTemplates.length }})
         </button>
-        <button v-for="category in currentCategories" :key="category" @click="selectCategory(category)"
-          :class="{ active: selectedCategory === category }" class="category-btn">
-          {{ category }}
-          <span class="count">({{ category.template_count || 0 }})</span>
+        <button v-for="category in currentCategories" :key="category.name" @click="selectCategory(category.name)"
+          :class="{ active: selectedCategory === category.name }" class="category-btn">
+          {{ category.name }}
+          <span class="count">({{ category.templateCount || 0 }})</span>
         </button>
       </div>
     </div>
@@ -128,15 +128,15 @@
             <div class="template-actions">
               <button @click.stop="handleToggleFavorite(template.id)"
                 :class="['favorite-btn', { active: template.isFavorite }]"
-                :disabled="store.toggleFavoriteMutation.isPending.value" :title="template.isFavorite ? '取消收藏' : '添加收藏'">
+                :disabled="store.toggleFavoriteMutation.isPending" :title="template.isFavorite ? '取消收藏' : '添加收藏'">
                 <span
-                  v-if="store.toggleFavoriteMutation.isPending.value && store.toggleFavoriteMutation.variables?.value === template.id">⏳</span>
+                  v-if="store.toggleFavoriteMutation.isPending && store.toggleFavoriteMutation.variables === template.id">⏳</span>
                 <span v-else>{{ template.isFavorite ? '❤️' : '🤍' }}</span>
               </button>
               <button @click.stop="handleDeleteTemplate(template.id)" class="delete-btn"
-                :disabled="store.deleteTemplateMutation.isPending.value" title="删除模板">
+                :disabled="store.deleteTemplateMutation.isPending" title="删除模板">
                 <span
-                  v-if="store.deleteTemplateMutation.isPending.value && store.deleteTemplateMutation.variables?.value === template.id">⏳</span>
+                  v-if="store.deleteTemplateMutation.isPending && store.deleteTemplateMutation.variables === template.id">⏳</span>
                 <span v-else>🗑️</span>
               </button>
             </div>
@@ -166,7 +166,7 @@
           </div>
         </div>
         <div class="actions">
-          <button @click="deleteTemplate(store.selectedTemplate.id)" :disabled="deleteTemplateMutation.isPending"
+          <button @click="store.deleteTemplate(store.selectedTemplate.id)" :disabled="deleteTemplateMutation.isPending"
             class="delete-btn">
             删除模板
           </button>
@@ -217,12 +217,12 @@
 import { computed, onMounted, watch, ref } from 'vue'
 import { useTemplateStore } from '../stores/template'
 import { useInitializeDatabaseMutation, useImportTemplatesMutation } from '../composables/useDatabase'
-import { DatabaseService } from '../services/database'
+// import { DatabaseService } from '../services/database'
 import type { CategoryView, Template } from '../types'
 
 // 防抖搜索
 const searchInput = ref('')
-let searchTimeout: number | null = null
+let searchTimeout: NodeJS.Timeout | null = null
 
 const store = useTemplateStore()
 
@@ -287,7 +287,7 @@ onMounted(async () => {
 // 解构store中的状态和方法
 const {
   currentView,
-  selectedTemplate,
+  // selectedTemplate,
   selectedCategory,
   filterOptions,
   isFilterPanelOpen,
@@ -301,11 +301,11 @@ const {
   templateTypesQuery,
   tagsQuery,
   searchQuery,
-  toggleFavoriteMutation,
+  // toggleFavoriteMutation,
   deleteTemplateMutation,
   switchView,
   selectCategory,
-  selectTemplate,
+  // selectTemplate,
   toggleFilterPanel,
   refreshData
 } = store
@@ -449,14 +449,23 @@ const handleFileSelect = async (event: Event) => {
     // 读取文件内容
     const text = await file.text()
     const importData = JSON.parse(text)
+    let templates: Template[] = []
 
-    // 验证数据格式
-    if (!importData.templates || !Array.isArray(importData.templates)) {
-      alert('文件格式不正确，缺少templates数组')
-      return
+    if (importData?.templates) {
+      // 验证数据格式
+      if (!Array.isArray(importData.templates)) {
+        alert('文件格式不正确，缺少templates数组')
+        return
+      }
+      templates = importData.templates as Template[]
+    } else {
+      // 验证数据格式
+      if (!Array.isArray(importData)) {
+        alert('文件格式不正确，缺少templates数组')
+        return
+      }
+      templates = importData as Template[]
     }
-
-    const templates = importData.templates as Template[]
 
     // 基本验证模板数据
     for (const template of templates) {
@@ -641,7 +650,7 @@ const handleFileSelect = async (event: Event) => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   min-width: 200px;
-  margin-top: 4px;
+  /* margin-top: 4px; */
 }
 
 .export-menu button {

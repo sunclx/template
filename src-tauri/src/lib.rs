@@ -29,7 +29,8 @@ pub fn run() {
             get_all_template_types,
             get_all_tags,
             save_tag,
-            import_template,
+            import_templates,
+            reset_tags
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

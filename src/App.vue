@@ -96,8 +96,8 @@ const isQueryExample = computed(() => templateStore.isQueryExample);
     /* 尺寸 */
     --title-bar-height: 40px;
     --status-bar-height: 20px;
-    --sidebar-width: 180px;
-    --middle-list-width: 260px;
+    --sidebar-width: 140px;
+    --middle-list-width: 200px;
 }
 
 * {

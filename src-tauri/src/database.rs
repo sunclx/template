@@ -1,6 +1,9 @@
 use duckdb::{Connection, Result as DuckResult, ToSql};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
+use std::collections::HashSet;
+use uuid::Uuid;
+use rand::Rng;
 
 /// 模板数据结构
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -367,5 +370,65 @@ impl DatabaseManager {
         }
 
         Ok(templates)
+    }
+
+    /// 清空所有模板
+    pub fn clear_all_templates(&mut self) -> DuckResult<()> {
+        self.conn.execute("DELETE FROM templates", [])?;
+        Ok(())
+    }
+
+    /// 清空所有标签
+    pub fn clear_all_tags(&mut self) -> DuckResult<()> {
+        self.conn.execute("DELETE FROM tags", [])?;
+        Ok(())
+    }
+
+    /// 获取模板数据库中的所有标签（从模板的tags字段中提取）
+    pub fn get_all_template_tags(&self) -> DuckResult<Vec<String>> {
+        let mut stmt = self.conn.prepare("SELECT tags FROM templates")?;
+        
+        let tags_iter = stmt.query_map([], |row| {
+            let tags_json: String = row.get(0)?;
+            let tags: Vec<String> = serde_json::from_str(&tags_json)
+                .map_err(|_| duckdb::Error::InvalidColumnIndex(0))?;
+            Ok(tags)
+        })?;
+
+        let mut all_tags = HashSet::new();
+        for tags_result in tags_iter {
+            let tags = tags_result?;
+            for tag in tags {
+                all_tags.insert(tag);
+            }
+        }
+
+        Ok(all_tags.into_iter().collect())
+    }
+
+    /// 重置标签：清空标签数据库，从模板中提取标签并保存到标签数据库
+    pub fn reset_tags(&mut self) -> DuckResult<()> {
+        // 1. 清空标签数据库
+        self.clear_all_tags()?;
+
+        // 2. 获取模板中的所有标签
+        let template_tags = self.get_all_template_tags()?;
+
+        // 3. 为每个标签生成随机颜色和UUID，并保存到标签数据库
+        let mut rng = rand::rng();
+        for tag_name in template_tags {
+            let tag_id = format!("tag-{}", Uuid::now_v7());
+            let color = format!("#{:06x}", rng.random::<u32>() & 0xFFFFFF);
+            
+            let tag = Tag {
+                id: tag_id,
+                name: tag_name,
+                color,
+            };
+            
+            self.upsert_tag(&tag)?;
+        }
+
+        Ok(())
     }
 }

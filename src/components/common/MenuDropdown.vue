@@ -37,7 +37,7 @@ interface Props {
   menuItems: MenuItem[]
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 const emit = defineEmits<{
   itemClick: [item: MenuItem]
 }>()
@@ -62,7 +62,7 @@ const showDropdown = () => {
 const hideDropdown = () => {
   hideTimer = setTimeout(() => {
     isActive.value = false
-  }, 150)
+  }, 50)
 }
 
 /**
@@ -89,11 +89,12 @@ const handleItemClick = (item: MenuItem) => {
   user-select: none;
   transition: background-color 0.2s;
   border-radius: 4px;
+  color: var(--text-main);
 }
 
 .menu-item:hover,
 .menu-item.active {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--hover-bg);
 }
 
 .dropdown-menu {
@@ -101,10 +102,10 @@ const handleItemClick = (item: MenuItem) => {
   top: 100%;
   left: 0;
   min-width: 180px;
-  background: #2d2d2d;
-  border: 1px solid #404040;
+  background: var(--card-bg);
+  border: 1px solid var(--border-light);
   border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   padding: 2px 0;
   margin-top: 1px;
@@ -116,18 +117,18 @@ const handleItemClick = (item: MenuItem) => {
   padding: 6px 12px;
   cursor: pointer;
   transition: background-color 0.2s;
-  color: #e0e0e0;
+  color: var(--text-main);
   font-size: 13px;
 }
 
 .dropdown-item:hover {
-  background-color: #404040;
+  background-color: var(--hover-bg);
 }
 
 .item-icon {
   width: 14px;
   margin-right: 8px;
-  color: #888;
+  color: var(--text-label);
   font-size: 12px;
 }
 
@@ -136,14 +137,14 @@ const handleItemClick = (item: MenuItem) => {
 }
 
 .item-shortcut {
-  color: #888;
+  color: var(--text-secondary);
   font-size: 11px;
   margin-left: 8px;
 }
 
 .dropdown-divider {
   height: 1px;
-  background-color: #404040;
+  background-color: var(--border-light);
   margin: 2px 0;
 }
 </style>

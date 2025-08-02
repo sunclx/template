@@ -57,7 +57,7 @@ const handleClick = () => {
 
 <style scoped>
 .category-item {
-  padding: 8px 12px;
+  padding: 8px 0px 8px 8px;
   border-radius: 6px;
   display: flex;
   align-items: center;

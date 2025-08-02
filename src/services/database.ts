@@ -8,13 +8,15 @@ export class DatabaseService {
   /**
    * 初始化数据库
    */
-  static async initDatabase(): Promise<string> {
+  static async initDatabase(): Promise<void> {
     try {
-      return await invoke<string>('init_database')
+      return await invoke<void>('init_database')
     } catch (error) {
-      console.error('Failed to initialize database:', error)
+      console.error('数据库初始化失败:', error)
       throw error
     }
+
+
   }
 
   /**
@@ -143,16 +145,28 @@ export class DatabaseService {
   }
 
   /**
-   * 初始化示例数据
+   * 重置标签
    */
-  static async initSampleData(): Promise<string> {
+  static async resetTags(): Promise<string> {
     try {
-      return await invoke<string>('init_sample_data')
+      return await invoke<string>('reset_tags')
     } catch (error) {
-      console.error('Failed to initialize sample data:', error)
+      console.error('Failed to reset tags:', error)
       throw error
     }
   }
+
+  // /**
+  //  * 初始化示例数据
+  //  */
+  // static async initSampleData(): Promise<string> {
+  //   try {
+  //     return await invoke<string>('init_sample_data')
+  //   } catch (error) {
+  //     console.error('Failed to initialize sample data:', error)
+  //     throw error
+  //   }
+  // }
 
   /**
    * 批量导入模板
@@ -183,27 +197,27 @@ export class DatabaseService {
 /**
  * 数据库初始化钩子
  */
-export async function initializeDatabase(): Promise<void> {
-  try {
-    console.log('Initializing database...')
-    await DatabaseService.initDatabase()
-    console.log('Database initialized successfully')
+// export async function initializeDatabase(): Promise<void> {
+//   try {
+//     console.log('数据库初始化中...')
+//     await DatabaseService.initDatabase()
+//     console.log('数据库初始化成功')
 
-    // 检查是否需要初始化示例数据
-    const templates = await DatabaseService.getAllTemplates()
-    if (templates.length === 0) {
-      console.log('No templates found, initializing sample data...')
-      await DatabaseService.initSampleData()
-      console.log('Sample data initialized successfully')
-    }
-  } catch (error) {
-    console.error('Failed to initialize database:', error)
-    throw error
-  }
-}
+//     // 检查是否需要初始化示例数据
+//     const templates = await DatabaseService.getAllTemplates()
+//     if (templates.length === 0) {
+//       console.log('未找到模板，正在初始化示例数据...')
+//       await DatabaseService.importTemplates(get_all_templates_sample())
+//       console.log('示例数据初始化成功')
+//     }
+//   } catch (error) {
+//     console.error('数据库初始化失败:', error)
+//     throw error
+//   }
+// }
 
 // 模拟模板数据
-async function get_all_templates_sample(): Promise<Template[]> {
+export function get_all_templates_sample(): Template[] {
   const templates: Template[] = [
     {
       id: '1',

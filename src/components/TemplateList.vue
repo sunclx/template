@@ -364,7 +364,8 @@ const formatTime = (timestamp: number) => {
 
 <style scoped>
 .template-list-section {
-  width: var(--middle-list-width);
+  width: fit-content;
+  max-width: var(--middle-list-width);
   height: 100%;
   background-color: white;
   display: flex;
@@ -429,7 +430,7 @@ const formatTime = (timestamp: number) => {
 .template-list {
   flex: 1;
   overflow-y: auto;
-  padding: 4px 6px;
+  padding: 4px 0px 4px 4px;
   display: flex;
   flex-direction: column;
   gap: 4px;

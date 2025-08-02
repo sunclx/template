@@ -40,9 +40,9 @@
         <div class="category-items">
           <CategoryItem label="全部" :count="templates.length" :active="selectedCategory === 'all'" value="all"
             @click="handleCategorySelect" />
-          <CategoryItem v-for="tag in tags" :key="tag.name" :label="tag.name" :count="getTagTemplateCount(tag.name)"
-            :active="selectedCategory === tag.name" :value="tag.name" icon="fas fa-tag" :icon-color="randomColor()"
-            @click="handleCategorySelect" />
+          <CategoryItem v-for="tag in tags" :key="tag.name" :label="tag.name" :count="tag.template_count"
+            :active="selectedCategory === tag.name" :value="tag.name" icon="fas fa-tag"
+            :icon-color="tag.color || randomColor()" @click="handleCategorySelect" />
         </div>
       </div>
     </div>
@@ -59,7 +59,7 @@ import { randomColor } from '@/utils/color'
 
 const templateStore = useTemplateStore()
 const { currentView, selectedCategory,
-  filteredTemplates: templates,
+  templates,
   diseases,
   tags,
   templateTypes } = storeToRefs(templateStore)
@@ -79,13 +79,6 @@ const handleViewChange = (view: string | CategoryView) => {
  */
 const handleCategorySelect = (categoryId: string) => {
   templateStore.selectCategory(categoryId)
-}
-
-/**
- * 获取标签对应的模板数量
- */
-const getTagTemplateCount = (tagId: string) => {
-  return templates.value?.filter(template => template.tags?.includes(tagId)).length || 0
 }
 
 </script>

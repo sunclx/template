@@ -10,7 +10,7 @@ export interface Tag {
   id: TagID;
   name: string;
   color?: string; // 可选的颜色标识
-  template_count?: number; // 模板数量
+  templateCount?: number; // 模板数量
 }
 
 // 模板内容部分

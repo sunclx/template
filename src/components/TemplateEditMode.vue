@@ -83,35 +83,24 @@
         </div>
 
         <!-- 元数据信息 -->
-        <div class="template-meta">
-          <div class="meta-row">
-            <div class="meta-item">
-              <span class="meta-label">创建：</span>
-              <span class="meta-value">{{ formatDateTime(template.createdAt) }}</span>
-            </div>
-            <div class="meta-item">
-              <span class="meta-label">更新：</span>
-              <span class="meta-value">{{ formatDateTime(template.updatedAt) }}</span>
-            </div>
-            <div class="meta-item">
-              <span class="meta-label">ID：</span>
-              <span class="meta-value">{{ template.id }}</span>
-            </div>
-          </div>
-        </div>
+        <TemplateMeta :template="template" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, toRaw } from 'vue'
-import { VueDraggableNext } from 'vue-draggable-next'
-import { useTemplateStore } from '../stores/template'
 import BaseButton from './common/BaseButton.vue'
 import SelectDropdown from './common/SelectDropdown.vue'
-import { copyToClipboard, defaultTemplateValue } from '@/utils/template'
+import TemplateMeta from './common/TemplateMeta.vue'
+
+import { computed, ref, watch, toRaw } from 'vue'
 import { storeToRefs } from 'pinia'
+import { VueDraggableNext } from 'vue-draggable-next'
+
+import { useTemplateStore } from '@/stores/template'
+import { copyToClipboard, defaultTemplateValue } from '@/utils/template'
+
 
 const templateStore = useTemplateStore()
 const { selectedTemplate, tags: availableTags, diseases, templateTypes } = storeToRefs(templateStore)
@@ -265,19 +254,6 @@ const autoResizeTextarea = async (event: Event) => {
   }
 }
 
-/**
- * 格式化日期时间
- */
-const formatDateTime = (timestamp: number) => {
-  const date = new Date(timestamp)
-  return date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
 </script>
 
 <style scoped>
@@ -291,7 +267,7 @@ const formatDateTime = (timestamp: number) => {
 }
 
 .template-detail-header {
-  padding: 12px 16px;
+  padding: 4px 6px;
   border-bottom: 1px solid var(--border-light);
   background-color: white;
 }
@@ -300,7 +276,7 @@ const formatDateTime = (timestamp: number) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 4px;
 }
 
 .detail-title-input {
@@ -308,13 +284,14 @@ const formatDateTime = (timestamp: number) => {
   font-weight: 700;
   color: var(--doc-primary);
   background: transparent;
-  border: 2px solid transparent;
+  border: 1px solid;
   border-radius: 6px;
   padding: 4px 8px;
   outline: none;
   transition: all 0.2s;
   width: 100%;
   max-width: 400px;
+  margin-right: 8px;
 }
 
 .detail-title-input:focus {
@@ -336,69 +313,29 @@ const formatDateTime = (timestamp: number) => {
 .template-detail-content {
   flex: 1;
   overflow-y: auto;
-  padding: 12px 16px;
+  padding: 6px 8px;
 }
 
 .detail-content {
-  max-width: 800px;
+  max-width: 1200px;
 }
 
-.template-meta {
-  background-color: rgba(248, 249, 250, 0.6);
-  border-radius: 6px;
-  padding: 6px 10px;
-  margin-top: 20px;
-  font-size: 11px;
-  opacity: 0.8;
-  border: 1px solid rgba(233, 236, 239, 0.5);
-}
-
-.meta-row {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-  min-width: 100px;
-  background-color: rgba(255, 255, 255, 0.7);
-  padding: 2px 6px;
-  border-radius: 3px;
-}
-
-.meta-label {
-  font-weight: 500;
-  color: rgba(108, 117, 125, 0.8);
-  margin-right: 4px;
-  flex-shrink: 0;
-}
-
-.meta-value {
-  color: rgba(73, 80, 87, 0.8);
-  font-size: 11px;
-  font-weight: normal;
-  font-family: 'Courier New', monospace;
-  font-size: 11px;
-}
 
 /* 编辑模式样式 */
 .edit-tags {
-  margin-bottom: 12px;
-  padding: 8px 10px;
+  padding: 4px 6px;
   background: #f8f9fa;
   border-radius: 6px;
   border: 1px solid #e9ecef;
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 4px;
 }
 
 .edit-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 2px;
   margin-bottom: 12px;
 }
 
@@ -406,14 +343,15 @@ const formatDateTime = (timestamp: number) => {
 .edit-row:nth-child(2) {
   display: inline-flex;
   flex: 1;
-  min-width: 250px;
+  min-width: 100px;
+  max-width: 200px;
   margin-bottom: 0;
   margin-right: 12px;
 }
 
 .edit-row:nth-child(3) {
   width: 100%;
-  margin-top: 12px;
+  margin-top: 2px;
   margin-bottom: 0;
 }
 
@@ -422,14 +360,14 @@ const formatDateTime = (timestamp: number) => {
 }
 
 .edit-row label {
-  min-width: 60px;
   font-weight: 500;
   color: #495057;
   font-size: 14px;
 }
 
 .edit-select-dropdown {
-  min-width: 150px;
+  min-width: 100px;
+  max-width: 200px;
   flex: 1;
 }
 
@@ -437,12 +375,8 @@ const formatDateTime = (timestamp: number) => {
 .tag-management {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 2px;
   align-items: center;
-  min-height: 32px;
-  padding: 4px;
-  border: 1px solid var(--border-light);
-  border-radius: 6px;
   background: #f8f9fa;
 }
 
@@ -528,7 +462,7 @@ const formatDateTime = (timestamp: number) => {
 .draggable-sections {
   display: flex;
   flex-direction: column;
-  gap: 25px;
+  gap: 8px;
 }
 
 .draggable-section {
@@ -583,17 +517,19 @@ const formatDateTime = (timestamp: number) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 4px;
 }
 
 .section-title-input {
   flex: 1;
   border: 1px solid var(--border-light);
   border-radius: 6px;
-  padding: 8px 12px;
-  font-size: 18px;
+  padding: 4px 6px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--doc-primary);
   background-color: white;
+  margin-left: 8px;
 }
 
 .section-title-input:focus {
@@ -604,7 +540,6 @@ const formatDateTime = (timestamp: number) => {
 .section-content {
   color: var(--text-main);
   line-height: 1.6;
-  padding: 0 10px;
 }
 
 .section-content-textarea {
@@ -612,7 +547,7 @@ const formatDateTime = (timestamp: number) => {
   width: 100%;
   border: 1px solid var(--border-light);
   border-radius: 6px;
-  padding: 12px;
+  padding: 8px;
   font-size: 14px;
   line-height: 1.6;
   color: var(--text-main);

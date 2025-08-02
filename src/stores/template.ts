@@ -1,13 +1,14 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { matchText } from '../utils/pinyin'
+import { randomColor } from '../utils/color'
 import {
   useTemplatesQuery,
   useTemplateQuery,
   useDiseasesQuery,
   useTemplateTypesQuery,
   useTagsQuery,
-  // useSearchTemplatesQuery,
+  useSearchTemplatesQuery,
   useToggleFavoriteMutation,
   useSaveTemplateMutation,
   useDeleteTemplateMutation,
@@ -37,24 +38,51 @@ export const useTemplateStore = defineStore('template', () => {
 
   // TanStack Query钩子
   // 初始化数据库
-  const { mutate: initDatabase, isSuccess } = useInitializeDatabaseMutation();
+  const { mutateAsync: initDatabase, isSuccess } = useInitializeDatabaseMutation();
   initDatabase()
 
   const templatesQuery = useTemplatesQuery(isSuccess);
-  const { data: templatesData } = templatesQuery;
-  const { data: diseasesData } = useDiseasesQuery();
-  const { data: templateTypesData } = useTemplateTypesQuery();
-  const { data: tagsData } = useTagsQuery();
+  const { data: templatesData,isLoading } = templatesQuery;
+
+  const diseasesQuery = useDiseasesQuery(isSuccess);
+  const { data: diseasesData } = diseasesQuery;
+
+  const templateTypesQuery = useTemplateTypesQuery(isSuccess);
+  const { data: templateTypesData } = templateTypesQuery;
+
+  const tagsQuery = useTagsQuery(isSuccess);
+  const { data: tagsData } = tagsQuery;
+
   const { data: selectedTemplate } = useTemplateQuery(selectedTemplateId);
 
 
   const templates = computed(() => templatesData.value || [])
   const diseases = computed(() => diseasesData.value || [])
   const templateTypes = computed(() => templateTypesData.value || [])
-  const tags = computed(() => tagsData.value || [])
+  const tags = computed(() => {
+    const tagsFromDb = tagsData.value || []  
+    // 为每个标签计算模板数量
+    return tagsFromDb.map(tag => {
+      const templateCount = templates.value.filter(template => 
+        template.tags.includes(tag.name)
+      ).length
+      
+      return {
+        ...tag,
+        template_count: templateCount
+      }
+    })
+  })
+  const tagsColorMap = computed(() => {
+    const colorMap: Record<string, string> = {}
+    tags.value.forEach(tag => {
+      colorMap[tag.name] = tag.color || randomColor()
+    })
+    return colorMap
+  })
 
   // 搜索查询（仅在有搜索关键词时启用）
-  // const searchQuery = useSearchTemplatesQuery(searchKeyword)
+  const searchQuery = useSearchTemplatesQuery(searchKeyword)
 
   // 变更钩子
   const toggleFavoriteMutation = useToggleFavoriteMutation()
@@ -265,6 +293,10 @@ export const useTemplateStore = defineStore('template', () => {
     }
   }
 
+  const getTagColor = (tagName: string) => {
+    return tagsColorMap.value[tagName] || randomColor()
+  }
+
   /**
    * 保存模板
    */
@@ -361,7 +393,7 @@ export const useTemplateStore = defineStore('template', () => {
     isQueryExample,
 
     // 查询状态
-    // isLoading,
+    isLoading,
     error,
 
     // 计算属性
@@ -374,10 +406,10 @@ export const useTemplateStore = defineStore('template', () => {
 
     // 查询对象（用于访问更详细的状态）
     templatesQuery,
-    // diseasesQuery,
-    // templateTypesQuery,
-    // tagsQuery,
-    // searchQuery,
+    diseasesQuery,
+    templateTypesQuery,
+    tagsQuery,
+    searchQuery,
 
     // 变更对象
     toggleFavoriteMutation,
@@ -386,6 +418,7 @@ export const useTemplateStore = defineStore('template', () => {
 
     // 方法
     switchView,
+    getTagColor,
     selectCategory,
     selectTemplate,
     toggleFavorite,

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { computed, type MaybeRef, Ref } from 'vue'
-import { DatabaseService } from '../services/database'
+import { DatabaseService,get_all_templates_sample } from '../services/database'
 import type { Template, Tag } from '../types'
 
 /**
@@ -22,8 +22,6 @@ export function useTemplatesQuery(enabled: MaybeRef<boolean> = true) {
   return useQuery({
     queryKey: QUERY_KEYS.templates,
     queryFn: () => DatabaseService.getAllTemplates(),
-    // staleTime: 5 * 60 * 1000,
-    // gcTime: 10 * 60 * 1000,
     enabled,
   })
 }
@@ -36,8 +34,6 @@ export function useTemplateQuery(id: Ref<string>) {
     queryKey: QUERY_KEYS.template(id),
     queryFn: () => DatabaseService.getTemplateById(id.value),
     enabled: !!id.value, // 只有当id存在时才执行查询
-    // staleTime: 5 * 60 * 1000,
-    // gcTime: 10 * 60 * 1000,
   })
 }
 
@@ -49,44 +45,39 @@ export function useSearchTemplatesQuery(keyword: Ref<string>) {
     queryKey: computed(() => QUERY_KEYS.search(keyword.value)),
     queryFn: () => DatabaseService.searchTemplates(keyword.value),
     enabled: computed(() => !!keyword.value && keyword.value.trim().length > 0), // 只有当关键词存在时才执行查询
-    // staleTime: 2 * 60 * 1000, // 搜索结果2分钟内有效
-    // gcTime: 5 * 60 * 1000,
   })
 }
 
 /**
  * 获取所有疾病分类的查询钩子
  */
-export function useDiseasesQuery() {
+export function useDiseasesQuery(enabled: MaybeRef<boolean> = true) {
   return useQuery({
     queryKey: QUERY_KEYS.diseases,
     queryFn: () => DatabaseService.getAllDiseases(),
-    // staleTime: 10 * 60 * 1000, // 疾病分类变化较少，10分钟内有效
-    // gcTime: 30 * 60 * 1000,
+    enabled,
   })
 }
 
 /**
  * 获取所有模板类型的查询钩子
  */
-export function useTemplateTypesQuery() {
+export function useTemplateTypesQuery(enabled: MaybeRef<boolean> = true) {
   return useQuery({
     queryKey: QUERY_KEYS.templateTypes,
     queryFn: () => DatabaseService.getAllTemplateTypes(),
-    // staleTime: 10 * 60 * 1000,
-    // gcTime: 30 * 60 * 1000,
+    enabled,
   })
 }
 
 /**
  * 获取所有标签的查询钩子
  */
-export function useTagsQuery() {
+export function useTagsQuery(enabled: MaybeRef<boolean> = true) {
   return useQuery({
     queryKey: QUERY_KEYS.tags,
     queryFn: () => DatabaseService.getAllTags(),
-    // staleTime: 10 * 60 * 1000,
-    // gcTime: 30 * 60 * 1000,
+    enabled,
   })
 }
 
@@ -159,6 +150,20 @@ export function useSaveTagMutation() {
 }
 
 /**
+ * 重置标签的变更钩子
+ */
+export function useResetTagsMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: () => DatabaseService.resetTags(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags })
+    },
+  })
+}
+
+/**
  * 数据库初始化的变更钩子
  */
 export function useInitializeDatabaseMutation() {
@@ -166,14 +171,16 @@ export function useInitializeDatabaseMutation() {
 
   return useMutation({
     mutationFn: async () => {
-      await DatabaseService.initDatabase()
+      console.log('数据库初始化中...');
+      await DatabaseService.initDatabase();
+
       // 检查是否需要初始化示例数据
-      const templates = await DatabaseService.getAllTemplates()
+      const templates = await DatabaseService.getAllTemplates();
       if (templates.length === 0) {
-        await DatabaseService.initSampleData()
-        console.log('数据库样本数据初始化成功')
+        console.log('未找到模板，正在初始化示例数据...')
+        await DatabaseService.importTemplates(get_all_templates_sample())
+        console.log('示例数据初始化成功')
       }
-      return '数据库初始化成功'
     },
     onSuccess: () => {
       // 初始化完成后，清除所有缓存并重新获取数据

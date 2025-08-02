@@ -1,8 +1,8 @@
 <template>
-  <div class="title-bar">
+  <div  class="title-bar" data-tauri-drag-region>
     <div class="logo-section">
       <div class="app-logo">医</div>
-      <div class="app-title">住院病历模板管理系统</div>
+      <div class="app-title">住院病历模板</div>
       <div class="menu-items">
         <MenuDropdown title="文件" :menu-items="fileMenuItems" @item-click="handleMenuItemClick" />
         <MenuDropdown title="编辑" :menu-items="editMenuItems" @item-click="handleMenuItemClick" />
@@ -28,13 +28,16 @@ import { getCurrentWindow } from '@tauri-apps/api/window'
 import BaseButton from './common/BaseButton.vue'
 import MenuDropdown from './common/MenuDropdown.vue'
 import { useTemplateStore } from '@/stores/template'
+import { useResetTagsMutation } from '@/composables/useDatabase'
 
-const templateStore = useTemplateStore();
+const templateStore =  useTemplateStore();
+const resetTagsMutation = useResetTagsMutation();
 
 // 菜单数据定义
 const fileMenuItems = [
   { key: 'new', label: '新建模板', icon: 'fas fa-file-plus', shortcut: 'Ctrl+N' },
   { key: 'open', label: '打开模板', icon: 'fas fa-folder-open', shortcut: 'Ctrl+O' },
+  { key: 'reset-tags', label: '重置标签', icon: 'fas fa-undo' },
   { key: 'save', label: '保存', icon: 'fas fa-save', shortcut: 'Ctrl+S' },
   { key: 'save-as', label: '另存为', icon: 'fas fa-save', shortcut: 'Ctrl+Shift+S' },
   { key: 'divider1', label: '', divider: true },
@@ -84,6 +87,8 @@ const handleMenuItemClick = (item: any) => {
   // TODO: 实现具体菜单功能
   if (item.key === 'queryExample') {
     templateStore.toggleQueryExample()
+  } else if (item.key === 'reset-tags') {
+    resetTagsMutation.mutateAsync()
   }
 }
 
@@ -99,12 +104,7 @@ const handleWindowAction = async (action: string) => {
         await appWindow.minimize()
         break
       case 'maximize':
-        const isMaximized = await appWindow.isMaximized()
-        if (isMaximized) {
-          await appWindow.unmaximize()
-        } else {
-          await appWindow.maximize()
-        }
+       await appWindow.toggleMaximize()      
         break
       case 'close':
         await appWindow.close()
@@ -165,8 +165,8 @@ const handleWindowAction = async (action: string) => {
 
 .menu-items {
   display: flex;
-  gap: 16px;
-  margin-left: 20px;
+  gap: 8px;
+  margin-left: 4px;
 }
 
 .menu-item {
@@ -187,6 +187,4 @@ const handleWindowAction = async (action: string) => {
   display: flex;
   gap: 8px;
 }
-
-/* 窗口控制按钮样式已迁移到BaseButton组件 */
 </style>
