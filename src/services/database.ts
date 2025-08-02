@@ -192,7 +192,21 @@ export class DatabaseService {
       throw error
     }
   }
+
+  /**
+   * 清空模板
+   */
+  static async clearTemplates(): Promise<string> {
+    try {
+      return await invoke<string>('clear_templates')
+    } catch (error) {
+      console.error('Failed to clear templates:', error)
+      throw error
+    }
+  }
 }
+
+
 
 /**
  * 数据库初始化钩子

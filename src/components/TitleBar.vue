@@ -1,5 +1,5 @@
 <template>
-  <div  class="title-bar" data-tauri-drag-region>
+  <div class="title-bar" data-tauri-drag-region>
     <div class="logo-section">
       <div class="app-logo">医</div>
       <div class="app-title">住院病历模板</div>
@@ -11,8 +11,7 @@
       </div>
     </div>
     <div class="window-controls">
-      <BaseButton variant="secondary" size="small" icon="mdi:pin" class="pin-btn"
-        @click="handleWindowAction('pin')" />
+      <BaseButton variant="secondary" size="small" icon="mdi:pin" class="pin-btn" @click="handleWindowAction('pin')" />
       <BaseButton variant="secondary" size="small" icon="mdi:minus" class="minimize-btn"
         @click="handleWindowAction('minimize')" />
       <BaseButton variant="secondary" size="small" icon="mdi:fullscreen" class="maximize-btn"
@@ -30,7 +29,7 @@ import MenuDropdown from './common/MenuDropdown.vue'
 import { useTemplateStore } from '@/stores/template'
 import { useResetTagsMutation } from '@/composables/useDatabase'
 
-const templateStore =  useTemplateStore();
+const templateStore = useTemplateStore();
 const resetTagsMutation = useResetTagsMutation();
 
 // 菜单数据定义
@@ -38,6 +37,8 @@ const fileMenuItems = [
   { key: 'new', label: '新建模板', icon: 'mdi:file-plus', shortcut: 'Ctrl+N' },
   { key: 'open', label: '打开模板', icon: 'mdi:folder-open', shortcut: 'Ctrl+O' },
   { key: 'reset-tags', label: '重置标签', icon: 'mdi:undo' },
+  // 清空模板
+  { key: 'clear-templates', label: '清空模板', icon: 'mdi:delete-empty' },
   { key: 'save', label: '保存', icon: 'mdi:content-save', shortcut: 'Ctrl+S' },
   { key: 'save-as', label: '另存为', icon: 'mdi:content-save-outline', shortcut: 'Ctrl+Shift+S' },
   { key: 'divider1', label: '', divider: true },
@@ -89,6 +90,8 @@ const handleMenuItemClick = (item: any) => {
     templateStore.toggleQueryExample()
   } else if (item.key === 'reset-tags') {
     resetTagsMutation.mutateAsync()
+  } else if (item.key === 'clear-templates') {
+    templateStore.clearTemplates()
   }
 }
 
@@ -104,7 +107,7 @@ const handleWindowAction = async (action: string) => {
         await appWindow.minimize()
         break
       case 'maximize':
-       await appWindow.toggleMaximize()      
+        await appWindow.toggleMaximize()
         break
       case 'close':
         await appWindow.close()

@@ -40,7 +40,7 @@
         <div class="category-items">
           <CategoryItem label="全部" :count="templates.length" :active="selectedCategory === 'all'" value="all"
             @click="handleCategorySelect" />
-          <CategoryItem v-for="tag in tags" :key="tag.name" :label="tag.name" :count="tag.template_count"
+          <CategoryItem v-for="tag in tags" :key="tag.name" :label="tag.name" :count="tag.templateCount"
             :active="selectedCategory === tag.name" :value="tag.name" icon="mdi:tag"
             :icon-color="tag.color || randomColor()" @click="handleCategorySelect" />
         </div>
@@ -58,11 +58,7 @@ import { storeToRefs } from 'pinia'
 import { randomColor } from '@/utils/color'
 
 const templateStore = useTemplateStore()
-const { currentView, selectedCategory,
-  templates,
-  diseases,
-  tags,
-  templateTypes } = storeToRefs(templateStore)
+const { currentView, selectedCategory, templates, diseases, tags, templateTypes } = storeToRefs(templateStore)
 
 // 模板引用
 const categoryContentRef = ref<HTMLElement>()

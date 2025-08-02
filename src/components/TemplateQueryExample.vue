@@ -15,19 +15,19 @@
       <div class="search-and-actions">
         <div class="search-box">
           <input type="text" v-model="searchInput" placeholder="搜索模板... (支持拼音搜索)" class="search-input">
-          <span class="search-icon">🔍</span>
-          <span v-if="store.searchQuery.isFetching" class="search-loading">⏳</span>
+          <Icon icon="mdi:magnify" class="search-icon" :size="16" />
+          <Icon v-if="store.searchQuery.isFetching" icon="mdi:loading" class="search-loading" :size="16" />
         </div>
 
         <!-- 导入导出按钮 -->
         <div class="import-export-actions">
           <button @click="importTemplates" :disabled="isImporting" class="action-btn import-btn" title="导入模板">
-            {{ isImporting ? '⏳' : '📥' }} 导入
+            <Icon :icon="isImporting ? 'mdi:loading' : 'mdi:file-import'" :size="16" /> 导入
           </button>
 
           <div class="export-dropdown">
             <button class="action-btn export-btn" :disabled="isExporting" title="导出模板">
-              {{ isExporting ? '⏳' : '📤' }} 导出
+              <Icon :icon="isExporting ? 'mdi:loading' : 'mdi:file-export'" :size="16" /> 导出
             </button>
             <div class="export-menu">
               <button @click="exportTemplates('all')" :disabled="isExporting">
@@ -56,32 +56,43 @@
     </div>
 
     <!-- 视图切换 -->
-    <div class="view-switcher">
-      <button v-for="view in views" :key="view.value" @click="switchView(view.value)"
-        :class="{ active: currentView === view.value }" class="view-btn">
-        {{ view.label }}
+    <div class="view-switcher-section">
+      <button @click="toggleViewSwitcher" class="section-toggle">
+        视图切换 <Icon :icon="isViewSwitcherOpen ? 'mdi:chevron-down' : 'mdi:chevron-right'" :size="16" />
       </button>
+      <div v-if="isViewSwitcherOpen" class="view-switcher-panel">
+        <div class="view-switcher">
+          <button v-for="view in views" :key="view.value" @click="switchView(view.value)"
+            :class="{ active: currentView === view.value }" class="view-btn">
+            {{ view.label }}
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- 分类列表 -->
     <div class="categories-section">
-      <h3>{{ currentViewLabel }}分类</h3>
-      <div class="categories">
-        <button @click="selectCategory('all')" :class="{ active: selectedCategory === 'all' }" class="category-btn">
-          全部 ({{ filteredTemplates.length }})
-        </button>
-        <button v-for="category in currentCategories" :key="category.name" @click="selectCategory(category.name)"
-          :class="{ active: selectedCategory === category.name }" class="category-btn">
-          {{ category.name }}
-          <span class="count">({{ category.templateCount || 0 }})</span>
-        </button>
+      <button @click="toggleCategories" class="section-toggle">
+        {{ currentViewLabel }}分类 <Icon :icon="isCategoriesOpen ? 'mdi:chevron-down' : 'mdi:chevron-right'" :size="16" />
+      </button>
+      <div v-if="isCategoriesOpen" class="categories-panel">
+        <div class="categories">
+          <button @click="selectCategory('all')" :class="{ active: selectedCategory === 'all' }" class="category-btn">
+            全部 ({{ filteredTemplates.length }})
+          </button>
+          <button v-for="category in currentCategories" :key="category.name" @click="selectCategory(category.name)"
+            :class="{ active: selectedCategory === category.name }" class="category-btn">
+            {{ category.name }}
+            <span class="count">({{ category.templateCount || 0 }})</span>
+          </button>
+        </div>
       </div>
     </div>
 
     <!-- 筛选选项 -->
     <div class="filter-section">
-      <button @click="toggleFilterPanel" class="filter-toggle">
-        筛选选项 {{ isFilterPanelOpen ? '▼' : '▶' }}
+      <button @click="toggleFilterPanel" class="section-toggle">
+        筛选选项 <Icon :icon="isFilterPanelOpen ? 'mdi:chevron-down' : 'mdi:chevron-right'" :size="16" />
       </button>
       <div v-if="isFilterPanelOpen" class="filter-panel">
         <label class="filter-option">
@@ -94,7 +105,7 @@
     <!-- 错误状态 -->
     <div v-if="store.error" class="error-state">
       <div class="error-message">
-        <span class="error-icon">⚠️</span>
+        <Icon icon="mdi:alert" class="error-icon" :size="20" />
         <p>数据加载失败: {{ store.error.message }}</p>
         <button v-if="retryCount < maxRetries" @click="retry" class="retry-btn">
           重试 ({{ retryCount }}/{{ maxRetries }})
@@ -105,7 +116,7 @@
     <!-- 空状态 -->
     <div v-else-if="store.filteredTemplates.length === 0 && !store.isLoading" class="empty-state">
       <div class="empty-message">
-        <span class="empty-icon">📝</span>
+        <Icon icon="mdi:file-document" class="empty-icon" :size="24" />
         <p v-if="store.searchKeyword">未找到匹配的模板</p>
         <p v-else>暂无模板数据</p>
         <button @click="store.setSearchKeyword('')" v-if="store.searchKeyword" class="clear-search-btn">
@@ -129,15 +140,17 @@
               <button @click.stop="handleToggleFavorite(template.id)"
                 :class="['favorite-btn', { active: template.isFavorite }]"
                 :disabled="store.toggleFavoriteMutation.isPending" :title="template.isFavorite ? '取消收藏' : '添加收藏'">
-                <span
-                  v-if="store.toggleFavoriteMutation.isPending && store.toggleFavoriteMutation.variables === template.id">⏳</span>
-                <span v-else>{{ template.isFavorite ? '❤️' : '🤍' }}</span>
+                <Icon
+                  v-if="store.toggleFavoriteMutation.isPending && store.toggleFavoriteMutation.variables === template.id"
+                  icon="mdi:loading" :size="16" />
+                <Icon v-else :icon="template.isFavorite ? 'mdi:heart' : 'mdi:heart-outline'" :size="16" />
               </button>
               <button @click.stop="handleDeleteTemplate(template.id)" class="delete-btn"
                 :disabled="store.deleteTemplateMutation.isPending" title="删除模板">
-                <span
-                  v-if="store.deleteTemplateMutation.isPending && store.deleteTemplateMutation.variables === template.id">⏳</span>
-                <span v-else>🗑️</span>
+                <Icon
+                  v-if="store.deleteTemplateMutation.isPending && store.deleteTemplateMutation.variables === template.id"
+                  icon="mdi:loading" :size="16" />
+                <Icon v-else icon="mdi:delete" :size="16" />
               </button>
             </div>
           </div>
@@ -219,6 +232,7 @@ import { useTemplateStore } from '../stores/template'
 import { useInitializeDatabaseMutation, useImportTemplatesMutation } from '../composables/useDatabase'
 // import { DatabaseService } from '../services/database'
 import type { CategoryView, Template } from '../types'
+import Icon from './common/Icon.vue'
 
 // 防抖搜索
 const searchInput = ref('')
@@ -240,6 +254,10 @@ const maxRetries = 3
 const fileInputRef = ref<HTMLInputElement | null>(null)
 const isExporting = ref(false)
 const isImporting = ref(false)
+
+// 面板折叠状态
+const isViewSwitcherOpen = ref(true)
+const isCategoriesOpen = ref(true)
 
 // 防抖搜索逻辑
 watch(searchInput, (newValue) => {
@@ -322,6 +340,20 @@ const currentViewLabel = computed(() => {
   const view = views.find(v => v.value === currentView)
   return view?.label || ''
 })
+
+/**
+ * 切换视图切换面板的显示状态
+ */
+const toggleViewSwitcher = () => {
+  isViewSwitcherOpen.value = !isViewSwitcherOpen.value
+}
+
+/**
+ * 切换分类面板的显示状态
+ */
+const toggleCategories = () => {
+  isCategoriesOpen.value = !isCategoriesOpen.value
+}
 
 // 获取查询状态类名
 const getStatusClass = (query: any) => {
@@ -507,6 +539,8 @@ const handleFileSelect = async (event: Event) => {
   padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
+  background: var(--doc-bg);
+  color: var(--text-main);
 }
 
 .header {
@@ -517,13 +551,13 @@ const handleFileSelect = async (event: Event) => {
 }
 
 .loading-indicator {
-  color: #007bff;
-  font-weight: bold;
+  color: var(--doc-primary);
+  font-weight: 500;
 }
 
 .error-message {
-  color: #dc3545;
-  font-weight: bold;
+  color: var(--danger);
+  font-weight: 500;
 }
 
 .search-section {
@@ -549,17 +583,24 @@ const handleFileSelect = async (event: Event) => {
 
 .search-input {
   width: 100%;
-  padding: 12px 45px 12px 40px;
-  border: 2px solid #e1e5e9;
-  border-radius: 8px;
-  font-size: 16px;
-  transition: all 0.3s ease;
+  padding: 8px 45px 8px 40px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  font-size: 14px;
+  background: var(--card-bg);
+  color: var(--text-main);
+  transition: all 0.2s ease;
+  height: 32px;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  border-color: var(--border-emphasis);
+  box-shadow: 0 0 0 2px rgba(46, 74, 184, 0.1);
+}
+
+.search-input::placeholder {
+  color: var(--text-secondary);
 }
 
 .search-icon {
@@ -595,38 +636,43 @@ const handleFileSelect = async (event: Event) => {
 }
 
 .action-btn {
-  padding: 10px 16px;
-  border: 2px solid #e1e5e9;
+  padding: 6px 12px;
+  border: 1px solid var(--border-light);
   border-radius: 6px;
-  background: white;
-  color: #495057;
-  font-size: 14px;
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .action-btn:hover:not(:disabled) {
-  border-color: #007bff;
-  color: #007bff;
+  background: var(--hover-bg);
+  color: var(--doc-primary);
+  border-color: var(--border-emphasis);
   transform: translateY(-1px);
 }
 
 .action-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
   transform: none;
 }
 
 .import-btn:hover:not(:disabled) {
-  border-color: #28a745;
-  color: #28a745;
+  color: var(--success);
+  border-color: var(--success);
 }
 
 .export-btn:hover:not(:disabled) {
-  border-color: #17a2b8;
-  color: #17a2b8;
+  color: var(--doc-secondary);
+  border-color: var(--doc-secondary);
 }
 
 /* 导出下拉菜单样式 */
@@ -644,31 +690,31 @@ const handleFileSelect = async (event: Event) => {
   position: absolute;
   top: 100%;
   right: 0;
-  background: white;
-  border: 2px solid #e1e5e9;
+  background: var(--card-bg);
+  border: 1px solid var(--border-light);
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   min-width: 200px;
-  /* margin-top: 4px; */
+  margin-top: 2px;
 }
 
 .export-menu button {
   display: block;
   width: 100%;
-  padding: 12px 16px;
+  padding: 8px 12px;
   border: none;
   background: none;
   text-align: left;
-  color: #495057;
-  font-size: 14px;
+  color: var(--text-secondary);
+  font-size: 13px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .export-menu button:hover:not(:disabled) {
-  background-color: #f8f9fa;
-  color: #17a2b8;
+  background-color: var(--hover-bg);
+  color: var(--doc-primary);
 }
 
 .export-menu button:disabled {
@@ -687,64 +733,133 @@ const handleFileSelect = async (event: Event) => {
 }
 
 .refresh-btn {
-  padding: 8px 16px;
-  background: #007bff;
+  padding: 6px 12px;
+  background: var(--doc-primary);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  height: 32px;
+  transition: all 0.2s ease;
 }
 
 .refresh-btn:hover {
-  background: #0056b3;
+  background: var(--doc-secondary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(46, 74, 184, 0.3);
+}
+
+/* 视图切换面板样式 */
+.view-switcher-section {
+  margin-bottom: 20px;
+}
+
+.section-toggle {
+  padding: 6px 12px;
+  border: 1px solid var(--border-light);
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.section-toggle:hover {
+  background: var(--hover-bg);
+  border-color: var(--border-emphasis);
+}
+
+.view-switcher-panel {
+  margin-top: 10px;
+  padding: 15px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background: var(--section-bg);
 }
 
 .view-switcher {
   display: flex;
   gap: 10px;
-  margin-bottom: 20px;
 }
 
 .view-btn {
-  padding: 8px 16px;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 4px;
+  padding: 6px 12px;
+  border: 1px solid var(--border-light);
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  border-radius: 6px;
   cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  height: 32px;
+}
+
+.view-btn:hover:not(.active) {
+  background: var(--hover-bg);
+  border-color: var(--border-emphasis);
 }
 
 .view-btn.active {
-  background: #007bff;
+  background: var(--doc-primary);
   color: white;
-  border-color: #007bff;
+  border-color: var(--doc-primary);
 }
 
+/* 分类面板样式 */
 .categories-section {
   margin-bottom: 20px;
+}
+
+.categories-panel {
+  margin-top: 10px;
+  padding: 15px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background: var(--section-bg);
 }
 
 .categories {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 10px;
 }
 
 .category-btn {
   padding: 6px 12px;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 4px;
+  border: 1px solid var(--border-light);
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  border-radius: 6px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 5px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  height: 32px;
+}
+
+.category-btn:hover:not(.active) {
+  background: var(--hover-bg);
+  border-color: var(--border-emphasis);
 }
 
 .category-btn.active {
-  background: #28a745;
+  background: var(--success);
   color: white;
-  border-color: #28a745;
+  border-color: var(--success);
 }
 
 .count {
@@ -756,20 +871,17 @@ const handleFileSelect = async (event: Event) => {
   margin-bottom: 20px;
 }
 
-.filter-toggle {
-  padding: 8px 16px;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 4px;
-  cursor: pointer;
+/* 筛选面板样式 */
+.filter-section {
+  margin-bottom: 20px;
 }
 
 .filter-panel {
   margin-top: 10px;
   padding: 15px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: #f8f9fa;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background: var(--section-bg);
 }
 
 .filter-option {
@@ -791,25 +903,27 @@ const handleFileSelect = async (event: Event) => {
 }
 
 .template-card {
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-light);
   border-radius: 8px;
   padding: 15px;
   cursor: pointer;
   transition: all 0.2s;
+  background: var(--card-bg);
 }
 
 .template-card:hover {
-  border-color: #007bff;
-  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
+  border-color: var(--border-emphasis);
+  box-shadow: 0 2px 8px rgba(46, 74, 184, 0.1);
+  transform: translateY(-1px);
 }
 
 .template-card.active {
-  border-color: #007bff;
-  background: #f0f8ff;
+  border-color: var(--doc-primary);
+  background: var(--active-bg);
 }
 
 .template-card.favorite {
-  border-left: 4px solid #ffc107;
+  border-left: 4px solid var(--warning);
 }
 
 .template-header {
@@ -821,7 +935,9 @@ const handleFileSelect = async (event: Event) => {
 
 .template-header h4 {
   margin: 0;
-  font-size: 1.1em;
+  color: var(--doc-primary);
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .template-actions {
@@ -835,18 +951,19 @@ const handleFileSelect = async (event: Event) => {
   border: none;
   font-size: 1.2em;
   cursor: pointer;
-  color: #ffc107;
+  color: var(--text-secondary);
   padding: 4px;
   border-radius: 4px;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
 }
 
 .favorite-btn:hover {
-  background-color: rgba(255, 193, 7, 0.1);
+  background: var(--section-bg);
+  color: var(--warning);
 }
 
 .favorite-btn.active {
-  color: #dc3545;
+  color: var(--warning);
 }
 
 .favorite-btn:disabled {
@@ -854,46 +971,83 @@ const handleFileSelect = async (event: Event) => {
   cursor: not-allowed;
 }
 
-.delete-btn {
+.template-actions .delete-btn {
   background: none;
   border: none;
-  font-size: 1.1em;
+  font-size: 16px;
   cursor: pointer;
-  color: #dc3545;
-  padding: 4px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+  color: var(--text-secondary);
+  padding: 6px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
 }
 
-.delete-btn:hover {
-  background-color: rgba(220, 53, 69, 0.1);
+.template-actions .delete-btn:hover {
+  background: var(--hover-bg);
+  color: var(--danger);
+  transform: scale(1.05);
 }
 
-.delete-btn:disabled {
+.template-actions .delete-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
 }
 
 .template-meta {
   display: flex;
   gap: 10px;
   margin-bottom: 10px;
-  font-size: 0.9em;
-  color: #666;
+  font-size: 13px;
+  color: var(--text-secondary);
 }
 
 .template-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 6px;
 }
 
 .tag {
-  background: #e9ecef;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-size: 0.8em;
-  color: #495057;
+  background: var(--section-bg);
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-light);
+  transition: all 0.2s ease;
+}
+
+.tag:hover {
+  background: var(--hover-bg);
+  color: var(--doc-primary);
+  border-color: var(--border-emphasis);
+}
+
+.disease,
+.type {
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.disease {
+  background: var(--section-bg);
+  color: var(--doc-primary);
+  border: 1px solid var(--border-light);
+}
+
+.type {
+  background: var(--hover-bg);
+  color: var(--doc-secondary);
+  border: 1px solid var(--border-light);
 }
 
 .template-detail {
@@ -935,63 +1089,84 @@ const handleFileSelect = async (event: Event) => {
   gap: 10px;
 }
 
-.delete-btn {
+.actions .delete-btn {
   padding: 8px 16px;
-  background: #dc3545;
+  background: var(--danger);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.delete-btn:hover {
-  background: #c82333;
+.actions .delete-btn:hover {
+  background: var(--danger);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+  filter: brightness(0.9);
 }
 
-.delete-btn:disabled {
+.actions .delete-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .query-status {
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  margin-top: 30px;
   padding: 20px;
-  background: #f8f9fa;
+  background: var(--card-bg);
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
 }
 
 .status-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 10px;
+  gap: 15px;
   margin-top: 15px;
 }
 
 .status-item {
   display: flex;
   justify-content: space-between;
-  padding: 8px;
-  background: white;
-  border-radius: 4px;
+  align-items: center;
+  padding: 10px;
+  background: var(--section-bg);
+  border-radius: 6px;
+  border: 1px solid var(--border-light);
+  font-size: 13px;
+}
+
+.status-item span:first-child {
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
 .status-loading {
-  color: #007bff;
-  font-weight: bold;
+  color: var(--doc-primary);
+  font-weight: 500;
 }
 
 .status-error {
-  color: #dc3545;
-  font-weight: bold;
+  color: var(--danger);
+  font-weight: 500;
 }
 
 .status-success {
-  color: #28a745;
-  font-weight: bold;
+  color: var(--success);
+  font-weight: 500;
 }
 
 .status-idle {
-  color: #6c757d;
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
 /* 加载状态 */
@@ -1027,9 +1202,9 @@ const handleFileSelect = async (event: Event) => {
 /* 错误状态 */
 .error-state {
   text-align: center;
-  padding: 2rem;
-  background-color: #fff5f5;
-  border: 1px solid #fed7d7;
+  padding: 40px 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-light);
   border-radius: 8px;
   margin: 1rem 0;
 }
@@ -1038,35 +1213,41 @@ const handleFileSelect = async (event: Event) => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 12px;
+  color: var(--danger);
 }
 
 .error-icon {
   font-size: 2rem;
+  color: var(--danger);
 }
 
 .error-message p {
-  color: #e53e3e;
+  color: var(--danger);
   margin: 0;
 }
 
 /* 空状态 */
 .empty-state {
   text-align: center;
-  padding: 3rem 2rem;
-  color: #666;
+  padding: 40px 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
 }
 
 .empty-message {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 12px;
+  color: var(--text-secondary);
 }
 
 .empty-icon {
   font-size: 3rem;
   opacity: 0.5;
+  color: var(--text-secondary);
 }
 
 .empty-message p {
@@ -1075,30 +1256,38 @@ const handleFileSelect = async (event: Event) => {
 }
 
 .clear-search-btn {
-  background-color: #007bff;
+  background: var(--doc-primary);
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  padding: 6px 12px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .clear-search-btn:hover {
-  background-color: #0056b3;
+  background: var(--doc-secondary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(46, 74, 184, 0.3);
 }
 
 .retry-btn {
-  background-color: #ffc107;
-  color: #212529;
+  background: var(--danger);
+  color: white;
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  padding: 6px 12px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .retry-btn:hover {
-  background-color: #e0a800;
+  background: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
 }
 </style>

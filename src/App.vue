@@ -9,8 +9,11 @@
         <div class="tanstack-container" v-if="isQueryExample">
             <TemplateQueryExample />
         </div>
+        <!-- 图标测试 -->
+        <IconTest v-if="showIconTest" />
+
         <!-- 主内容区域 -->
-        <div class="main-container" v-else>
+        <div class="main-container" v-else-if="!isQueryExample">
             <!-- 左侧边栏 -->
             <Sidebar />
 
@@ -35,17 +38,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import TitleBar from './components/TitleBar.vue'
 import Sidebar from './components/Sidebar.vue'
 import TemplateList from './components/TemplateList.vue'
 import TemplateDetail from './components/TemplateDetail.vue'
 import StatusBar from './components/StatusBar.vue'
 import TemplateQueryExample from './components/TemplateQueryExample.vue'
+import IconTest from './components/IconTest.vue'
 
 import { useTemplateStore } from './stores/template.ts'
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools'
 
+// 显示图标测试页面
+const showIconTest = ref(false)
 
 // 初始化状态管理
 const templateStore = useTemplateStore()

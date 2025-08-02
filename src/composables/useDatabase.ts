@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { computed, type MaybeRef, Ref } from 'vue'
-import { DatabaseService,get_all_templates_sample } from '../services/database'
+import { DatabaseService, get_all_templates_sample } from '../services/database'
 import type { Template, Tag } from '../types'
 
 /**
@@ -202,6 +202,26 @@ export function useImportTemplatesMutation() {
     },
     onSuccess: () => {
       // 导入成功后，刷新相关查询
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.templates })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.diseases })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.templateTypes })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags })
+    },
+  })
+}
+
+/**
+ * 清空模板的变更钩子
+ */
+export function useClearTemplatesMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async () => {
+      return await DatabaseService.clearTemplates()
+    },
+    onSuccess: () => {
+      // 清空成功后，刷新相关查询
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.templates })
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.diseases })
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.templateTypes })

@@ -12,7 +12,8 @@ import {
   useToggleFavoriteMutation,
   useSaveTemplateMutation,
   useDeleteTemplateMutation,
-  useInitializeDatabaseMutation
+  useInitializeDatabaseMutation,
+  useClearTemplatesMutation,
 } from '../composables/useDatabase'
 import type {
   Template,
@@ -42,7 +43,7 @@ export const useTemplateStore = defineStore('template', () => {
   initDatabase()
 
   const templatesQuery = useTemplatesQuery(isSuccess);
-  const { data: templatesData,isLoading } = templatesQuery;
+  const { data: templatesData, isLoading } = templatesQuery;
 
   const diseasesQuery = useDiseasesQuery(isSuccess);
   const { data: diseasesData } = diseasesQuery;
@@ -60,16 +61,16 @@ export const useTemplateStore = defineStore('template', () => {
   const diseases = computed(() => diseasesData.value || [])
   const templateTypes = computed(() => templateTypesData.value || [])
   const tags = computed(() => {
-    const tagsFromDb = tagsData.value || []  
+    const tagsFromDb = tagsData.value || []
     // 为每个标签计算模板数量
     return tagsFromDb.map(tag => {
-      const templateCount = templates.value.filter(template => 
+      const templateCount = templates.value.filter(template =>
         template.tags.includes(tag.name)
       ).length
-      
+
       return {
         ...tag,
-        template_count: templateCount
+        templateCount,
       }
     })
   })
@@ -136,8 +137,8 @@ export const useTemplateStore = defineStore('template', () => {
     }
 
     // 按筛选条件过滤
-    if (filterOptions.value.isFavorite) {
-      result = result.filter(template => template.isFavorite)
+    if (filterOptions.value.isFavorite !== undefined) {
+      result = result.filter(template => template.isFavorite === filterOptions.value.isFavorite)
     }
 
     // 按病种筛选（多选）
@@ -159,6 +160,42 @@ export const useTemplateStore = defineStore('template', () => {
       result = result.filter(template =>
         filterOptions.value.tags!.some(tag => template.tags.includes(tag))
       )
+    }
+
+    // 按更新时间筛选
+    if (filterOptions.value.timeRange) {
+      const timeRange = filterOptions.value.timeRange
+
+      result = result.filter(template => {
+        const updatedAt = template.updatedAt
+
+        switch (timeRange) {
+          case 'today':
+            // 今天：从今天00:00:00开始
+            const todayStart = new Date()
+            todayStart.setHours(0, 0, 0, 0)
+            return updatedAt >= todayStart.getTime()
+
+          case 'week':
+            // 本周：从本周一00:00:00开始
+            const weekStart = new Date()
+            const dayOfWeek = weekStart.getDay()
+            const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+            weekStart.setDate(weekStart.getDate() - daysToMonday)
+            weekStart.setHours(0, 0, 0, 0)
+            return updatedAt >= weekStart.getTime()
+
+          case 'month':
+            // 本月：从本月1号00:00:00开始
+            const monthStart = new Date()
+            monthStart.setDate(1)
+            monthStart.setHours(0, 0, 0, 0)
+            return updatedAt >= monthStart.getTime()
+
+          default:
+            return true
+        }
+      })
     }
 
     return result
@@ -252,7 +289,8 @@ export const useTemplateStore = defineStore('template', () => {
   const switchView = (view: CategoryView) => {
     currentView.value = view
     selectedCategory.value = 'all'
-    selectedTemplate.value = null
+    // selectedTemplate.value = null
+    selectedTemplateId.value = "没有选择模板"
   }
 
   /**
@@ -260,13 +298,15 @@ export const useTemplateStore = defineStore('template', () => {
    */
   const selectCategory = (categoryId: string) => {
     selectedCategory.value = categoryId
-    selectedTemplate.value = null
+    // selectedTemplate.value = null
+    selectedTemplateId.value = "没有选择模板"
 
     // 自动选择第一个模板（如果有的话）
     setTimeout(() => {
       const filtered = filteredTemplates.value
       if (filtered.length > 0) {
-        selectedTemplate.value = filtered[0]
+        // selectedTemplate.value = filtered[0]
+        selectedTemplateId.value = filtered[0].id
       }
     }, 0)
   }
@@ -332,6 +372,21 @@ export const useTemplateStore = defineStore('template', () => {
   const setSearchKeyword = (keyword: string) => {
     searchKeyword.value = keyword
     // TanStack Query会自动处理响应式更新，无需手动refetch
+  }
+
+  /**
+   * 清空模板
+   */
+  const clearTemplatesMutation = useClearTemplatesMutation()
+  const clearTemplates = async () => {
+    try {
+      await clearTemplatesMutation.mutateAsync()
+      // 刷新数据
+      refreshData()
+    } catch (error) {
+      console.error('Failed to clear templates:', error)
+      throw error
+    }
   }
 
   /**
@@ -410,6 +465,7 @@ export const useTemplateStore = defineStore('template', () => {
     templateTypesQuery,
     tagsQuery,
     searchQuery,
+    clearTemplates,
 
     // 变更对象
     toggleFavoriteMutation,

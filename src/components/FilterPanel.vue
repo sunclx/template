@@ -106,72 +106,81 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
+import { useTemplateStore } from '../stores/template'
 import BaseButton from './common/BaseButton.vue'
 import Icon from './common/Icon.vue'
 
 // 定义props
 interface Props {
   isOpen: boolean
-  filterOptions: any
-  diseases: any[]
-  templateTypes: any[]
-  tags: any[]
 }
 
 defineProps<Props>()
 
-// 定义emits
-interface Emits {
-  setFilter: [key: string, value: any]
-  toggleTagFilter: [tagId: string]
-  toggleDiseaseFilter: [diseaseId: string]
-  toggleTemplateTypeFilter: [typeId: string]
-  clearFilters: []
-  applyFilters: []
-}
-
-const emit = defineEmits<Emits>()
+// 使用store
+const templateStore = useTemplateStore()
+const { filterOptions, diseases, templateTypes, tags } = storeToRefs(templateStore)
 
 /**
  * 设置筛选条件
  */
 const setFilter = (key: string, value: any) => {
-  emit('setFilter', key, value)
+  templateStore.setFilterOptions({ [key]: value })
 }
 
 /**
  * 切换标签筛选
  */
 const toggleTagFilter = (tagId: string) => {
-  emit('toggleTagFilter', tagId)
+  const currentTags = filterOptions.value.tags || []
+  const newTags = currentTags.includes(tagId)
+    ? currentTags.filter(id => id !== tagId)
+    : [...currentTags, tagId]
+  templateStore.setFilterOptions({ tags: newTags })
 }
 
 /**
  * 切换病种筛选
  */
 const toggleDiseaseFilter = (diseaseId: string) => {
-  emit('toggleDiseaseFilter', diseaseId)
+  const currentDiseases = filterOptions.value.disease || []
+  const newDiseases = currentDiseases.includes(diseaseId)
+    ? currentDiseases.filter(id => id !== diseaseId)
+    : [...currentDiseases, diseaseId]
+  templateStore.setFilterOptions({ disease: newDiseases })
 }
 
 /**
  * 切换模板类型筛选
  */
 const toggleTemplateTypeFilter = (typeId: string) => {
-  emit('toggleTemplateTypeFilter', typeId)
+  const currentTypes = filterOptions.value.templateType || []
+  const newTypes = currentTypes.includes(typeId)
+    ? currentTypes.filter(id => id !== typeId)
+    : [...currentTypes, typeId]
+  templateStore.setFilterOptions({ templateType: newTypes })
 }
 
 /**
  * 清除筛选条件
  */
 const clearFilters = () => {
-  emit('clearFilters')
+  templateStore.setFilterOptions({
+    isFavorite: undefined,
+    disease: [],
+    templateType: [],
+    tags: [],
+    searchKeyword: '',
+    timeRange: undefined
+  })
 }
 
 /**
  * 应用筛选
  */
 const applyFilters = () => {
-  emit('applyFilters')
+  templateStore.closeFilterPanel()
 }
 </script>
 

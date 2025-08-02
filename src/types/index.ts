@@ -52,6 +52,7 @@ export interface FilterOptions {
   tags?: TagID[];
   isFavorite?: boolean;
   searchKeyword?: string;
+  timeRange?: 'today' | 'week' | 'month'; // 时间范围筛选
 }
 
 // 分类视图类型

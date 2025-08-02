@@ -1,12 +1,21 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import { resolve } from "path";
+import Icons from 'unplugin-icons/vite';
+import { FileSystemIconLoader } from 'unplugin-icons/loaders';
 
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    Icons({
+      // 编译器选项
+      compiler: 'vue3',
+      // autoInstall: true,
+    })
+  ],
   resolve: {
     alias: {
       "@": resolve(__dirname, "src"),

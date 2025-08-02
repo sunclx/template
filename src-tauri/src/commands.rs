@@ -211,6 +211,20 @@ pub async fn reset_tags(state: State<'_, AppState>) -> Result<String, String> {
     Ok("Tags reset successfully".to_string())
 }
 
+/// 清空模板
+#[tauri::command]
+pub async fn clear_templates(state: State<'_, AppState>) -> Result<String, String> {
+    let mut db = state
+        .db
+        .lock()
+        .map_err(|e| format!("Failed to lock database: {}", e))?;
+    let db_manager = db.as_mut().ok_or("Database not initialized")?;
+    db_manager
+        .clear_all_templates()
+        .map_err(|e| format!("Database error: {}", e))?;
+    Ok("Templates cleared successfully".to_string())
+}
+
 // 初始化示例数据
 // #[tauri::command]
 // pub async fn init_sample_data(state: State<'_, AppState>) -> Result<String, String> {
