@@ -12,10 +12,23 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "template",
         "decorations": false,
         "width": 800,
-        "height": 600
+        "height": 600,
+        "visible": false
+      },
+      {
+        "label": "float",
+        "title": "悬浮搜索",
+        "decorations": false,
+        "width": 400,
+        "height": 400,
+        "url": "float.html",
+        "transparent": true,
+        "skipTaskbar": true,
+        "alwaysOnTop": true
       }
     ],
     "security": {

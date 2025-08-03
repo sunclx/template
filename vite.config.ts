@@ -21,6 +21,14 @@ export default defineConfig(async () => ({
       "@": resolve(__dirname, "src"),
     },
   },
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        float: resolve(__dirname, 'float.html')
+      }
+    }
+  },
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //

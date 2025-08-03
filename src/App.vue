@@ -34,6 +34,11 @@
         </div> -->
         <!-- 底部状态栏 -->
         <StatusBar />
+        
+        <!-- 悬浮窗口测试按钮 -->
+        <button @click="createFloatWindow" class="float-window-btn">
+            打开悬浮搜索
+        </button>
     </div>
 </template>
 
@@ -49,6 +54,7 @@ import IconTest from './components/IconTest.vue'
 
 import { useTemplateStore } from './stores/template.ts'
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools'
+import { invoke } from '@tauri-apps/api/core'
 
 // 显示图标测试页面
 const showIconTest = ref(false)
@@ -56,6 +62,18 @@ const showIconTest = ref(false)
 // 初始化状态管理
 const templateStore = useTemplateStore()
 const isQueryExample = computed(() => templateStore.isQueryExample);
+
+/**
+ * 创建悬浮搜索窗口
+ */
+const createFloatWindow = async () => {
+    try {
+        await invoke('create_float_window')
+        console.log('悬浮窗口创建成功')
+    } catch (error) {
+        console.error('创建悬浮窗口失败:', error)
+    }
+}
 
 /**
  * 组件挂载时初始化数据库和加载数据
@@ -156,6 +174,29 @@ body {
     background: var(--doc-primary);
     color: white;
     border-color: var(--doc-primary);
+}
+
+.float-window-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    background: var(--doc-primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(46, 74, 184, 0.3);
+    transition: all 0.2s ease;
+    z-index: 1000;
+}
+
+.float-window-btn:hover {
+    background: var(--doc-secondary);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(46, 74, 184, 0.4);
 }
 
 .main-container {
