@@ -49,6 +49,7 @@ import MdiFileDocument from '~icons/mdi/file-document'
 import MdiHeart from '~icons/mdi/heart'
 import MdiHeartOutline from '~icons/mdi/heart-outline'
 import MdiDeleteEmpty from '~icons/mdi/delete-empty'
+import MdiAccountCircle from '~icons/mdi/account-circle'
 
 // Carbon Icons - 项目中实际使用的图标
 import CarbonAdd from '~icons/carbon/add'
@@ -57,7 +58,10 @@ import CarbonEdit from '~icons/carbon/edit'
 // Tabler Icons - 项目中实际使用的图标
 import TablerHeart from '~icons/tabler/heart'
 import TablerStar from '~icons/tabler/star'
-
+import MdiPhone from '~icons/mdi/phone'
+import MdiMonitorShare from '~icons/mdi/monitor-share'
+import MdiRecordCircle from '~icons/mdi/record-circle'
+import MdiTranslate from '~icons/mdi/translate'
 /**
  * 图标注册表
  * 键名格式: 'collection:name'
@@ -109,6 +113,11 @@ export const iconRegistry: Record<string, any> = {
   'mdi:heart': MdiHeart,
   'mdi:heart-outline': MdiHeartOutline,
   'mdi:delete-empty': MdiDeleteEmpty,
+  'mdi:phone': MdiPhone,
+  'mdi:monitor-share': MdiMonitorShare,
+  'mdi:record-circle': MdiRecordCircle,
+  'mdi:translate': MdiTranslate,
+  'mdi:account-circle': MdiAccountCircle,
 
   // Carbon Icons
   'carbon:add': CarbonAdd,

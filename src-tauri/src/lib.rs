@@ -32,7 +32,8 @@ pub fn run() {
             import_templates,
             reset_tags,
             clear_templates,
-            create_float_window
+            create_float_window,
+            get_mouse_position
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

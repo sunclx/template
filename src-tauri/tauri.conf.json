@@ -23,11 +23,12 @@
         "label": "float",
         "title": "悬浮搜索",
         "decorations": false,
-        "width": 400,
-        "height": 400,
+        "width": 274,
+        "height": 350,
         "url": "float.html",
         "transparent": true,
         "skipTaskbar": true,
+        "shadow": false,
         "alwaysOnTop": true
       }
     ],

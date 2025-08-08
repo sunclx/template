@@ -266,18 +266,41 @@ pub async fn clear_templates(state: State<'_, AppState>) -> Result<String, Strin
 /// 创建悬浮搜索窗口
 #[tauri::command]
 pub async fn create_float_window(app_handle: AppHandle) -> Result<(), String> {
-    let window =
-        WebviewWindowBuilder::new(&app_handle, "float", WebviewUrl::App("float.html".into()))
-            .title("悬浮搜索")
-            .inner_size(300.0, 400.0)
-            .min_inner_size(250.0, 300.0)
-            .resizable(true)
-            .decorations(false)
-            .always_on_top(true)
-            .skip_taskbar(true)
-            .transparent(true)
-            .build()
-            .map_err(|e| format!("Failed to create float window: {}", e))?;
+    WebviewWindowBuilder::new(&app_handle, "float", WebviewUrl::App("float.html".into()))
+        .title("悬浮搜索")
+        .inner_size(300.0, 400.0)
+        .min_inner_size(250.0, 300.0)
+        .resizable(true)
+        .decorations(false)
+        .always_on_top(true)
+        .skip_taskbar(true)
+        .transparent(true)
+        .build()
+        .map_err(|e| format!("Failed to create float window: {}", e))?;
 
     Ok(())
+}
+
+use mouse_position::mouse_position::Mouse;
+use serde_json::json;
+
+#[tauri::command]
+pub fn get_mouse_position() -> serde_json::Value {
+    /*
+     * because we set the window to ignore cursor events, we cannot use
+     * javascript to get the mouse position, so we use get mouse position manually
+     */
+    let position = Mouse::get_mouse_position();
+    match position {
+        Mouse::Position { x, y } => {
+            json!({
+                "clientX": x,
+                "clientY": y
+            })
+        }
+        Mouse::Error => {
+            println!("Error getting mouse position");
+            json!(null)
+        }
+    }
 }

@@ -1,14 +1,14 @@
 <template>
-  <div class="floating-widget" @mouseenter="showMenu" @mouseleave="hideMenu">
+  <div id="resize-container" class="floating-widget" @mouseover="showMenu" @mouseout="hideMenu">
     <!-- 圆形图标 -->
-    <div data-tauri-drag-region class="floating-icon" :class="{ expanded: isMenuVisible }" @click="toggleMainWindow">
+    <div data-tauri-drag-region class="floating-icon" :class="{ expanded: isMenuVisible }">
       <Icon data-tauri-drag-region icon="mdi:account-circle" size="32" />
     </div>
 
     <!-- 展开的菜单面板 -->
     <Transition name="menu-fade">
       <div v-if="isMenuVisible" class="menu-panel">
-        <!-- 菜单项 -->
+
         <div class="menu-items">
           <div class="menu-item" @click="handleMenuClick('call')">
             <Icon icon="mdi:phone" size="16" />
@@ -64,18 +64,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
-import { WebviewWindow, getCurrentWebviewWindow } from '@tauri-apps/api/webviewwindow'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewwindow'
 
 import { useTemplateStore } from '../stores/template'
 import { matchText } from '../utils/pinyin'
 import Icon from './common/Icon.vue'
 import type { Template } from '../types'
+import { LogicalSize } from '@tauri-apps/api/dpi'
 
 const templateStore = useTemplateStore()
 
 // 组件状态
-const isMenuVisible = ref(false)
+const isMenuVisible = ref(true)
 const searchKeyword = ref('')
 const searchResults = ref<Template[]>([])
 
@@ -101,18 +102,21 @@ const hideMenu = () => {
   }, 500)
 }
 
+// const toggleMenu = () => {
+//   isMenuVisible.value = !isMenuVisible.value
+// }
 /**
  * 切换主窗口可见性
  */
-const toggleMainWindow = async () => {
-  const appWindow = new WebviewWindow('main');
-  const isVisible = await appWindow.isVisible();
-  if (isVisible) {
-    await appWindow.hide();
-  } else {
-    await appWindow.show();
-  }
-}
+// const toggleMainWindow = async () => {
+//   const appWindow = new WebviewWindow('main');
+//   const isVisible = await appWindow.isVisible();
+//   if (isVisible) {
+//     await appWindow.hide();
+//   } else {
+//     await appWindow.show();
+//   }
+// }
 
 /**
  * 处理菜单项点击
@@ -161,23 +165,85 @@ const selectTemplate = (template: Template) => {
 
 // 监听搜索关键词变化
 watch(searchKeyword, handleSearch)
+// 防抖函数
+const debounce = (func: Function, delay: number) => {
+  let timeoutId: NodeJS.Timeout;
+  return (...args: any[]) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func.apply(null, args), delay);
+  };
+};
+
+// 窗口尺寸调整函数
+const adjustWindowSize = async (entries: ResizeObserverEntry[]) => {
+  const target = entries[0].target;
+
+  // 获取内容尺寸（加上必要的边距/填充）
+  const contentWidth = target.scrollWidth;  // 额外边距
+  const contentHeight = target.scrollHeight;
+  console.log(contentWidth, contentHeight);
+  const appWindow = getCurrentWebviewWindow();
+  // 设置窗口尺寸 (使用逻辑像素)
+  await appWindow.setSize(new LogicalSize(contentWidth, contentHeight));
+
+};
+
+// 防抖的窗口尺寸调整函数
+const debouncedAdjustWindowSize = debounce(adjustWindowSize, 100);
+
+// 监听内容元素尺寸变化（带防抖）
+const resizeObserver = new ResizeObserver((entries) => {
+  debouncedAdjustWindowSize(entries);
+});
+
+
+
+
+// 清理（在组件卸载时）
+// resizeObserver.unobserve(contentEl);
 
 onMounted(async () => {
   // 初始化时隐藏菜单
-  const appWindow = getCurrentWebviewWindow();
-  await appWindow.setIgnoreCursorEvents(true);
+  // const appWindow = getCurrentWebviewWindow();
+  // await appWindow.setIgnoreCursorEvents(true);
+  // 启动监听（在组件挂载时）
+  const contentEl = document.getElementById('resize-container');
+  if (contentEl) {
+    resizeObserver.observe(contentEl);
+  }
 })
+onUnmounted(() => {
+  const contentEl = document.getElementById('resize-container');
+  // 组件卸载时移除监听
+  if (contentEl) {
+    resizeObserver.unobserve(contentEl);
+  }
+})
+
+
 </script>
 <style></style>
 
 
 <style scoped>
-.floating-widget {
+#resize-container {
+  background-color: transparent;
   position: fixed;
   top: 50%;
-  right: 20px;
+  right: 2px;
   transform: translateY(-50%);
+  width: fit-content;
+  height: fit-content;
   z-index: 9999;
+}
+
+.floating-widget {
+  position: relative;
+  width: fit-content;
+  height: fit-content;
+  display: flex;
+  align-items: center;
+  flex-direction: row-reverse;
 }
 
 .floating-icon {
@@ -204,19 +270,17 @@ onMounted(async () => {
 }
 
 .menu-panel {
-  position: absolute;
-  right: 70px;
-  top: 50%;
-  transform: translateY(-50%);
+  position: relative;
+  margin-right: 10px;
   width: 280px;
+  min-height: 400px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.2);
   padding: 16px;
-  max-height: 500px;
-  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .menu-items {
@@ -253,13 +317,13 @@ onMounted(async () => {
 .search-icon {
   position: absolute;
   left: 12px;
-  top: 50%;
+  /* top: 50%; */
   transform: translateY(-50%);
   color: #999;
 }
 
 .search-input {
-  width: 100%;
+  /* width: 100%; */
   padding: 10px 12px 10px 36px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 8px;
