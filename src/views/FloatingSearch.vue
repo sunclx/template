@@ -1,9 +1,21 @@
 <template>
-  <div class="floating-search" @mouseenter="handleMouseEnter">
+  <div class="floating-search" @mouseenter="handleMouseEnter" @blur="handleBlur">
     <!-- 搜索图标 -->
-    <div class="search-icon-container" :class="{ expanded: isExpanded }">
-      <Icon data-tauri-drag-region icon="mdi:magnify" size="50" class="search-icon" @click="handleIconClick"
-        @dblclick="null" />
+    <div data-tauri-drag-region class="search-icon-container" :class="{ expanded: isExpanded }" ref="searchIconRef">
+      <!-- 右侧小图标按钮组 -->
+      <div class="action-buttons" v-show="!isExpanded">
+        <button class="action-button" @click="handleMoveClick" title="移动">
+          <Icon icon="mdi:drag" size="16" />
+        </button>
+        <button class="action-button" @click="handleLockClick" title="锁定">
+          <Icon icon="mdi:lock" size="16" />
+        </button>
+        <button class="action-button" @click="handleExpandClick" title="展开">
+          <Icon icon="mdi:arrow-expand" size="16" />
+        </button>
+      </div>
+      
+      <Icon icon="mdi:magnify" size="50" class="search-icon" @click="handleIconClick" @dblclick="handleIconDblClick" />
 
       <!-- 展开的搜索框 -->
       <Transition name="search-expand">
@@ -11,14 +23,29 @@
           <input ref="searchInputRef" v-model="searchKeyword" type="text" placeholder="搜索模板..." class="search-input"
             @input="handleSearch" @focus="handleInputFocus" @blur="handleInputBlur" />
 
+          <!-- 清除按钮 -->
+          <button v-if="searchKeyword" @click="clearSearch" class="clear-button">
+            <Icon icon="mdi:close" size="16" />
+          </button>
+
           <!-- 搜索结果下拉列表 -->
-          <div v-if="searchResults.length > 0" class="search-results">
-            <div v-for="template in searchResults" :key="template.id" class="search-result-item"
-              @click="selectTemplate(template)">
-              <div class="template-title">{{ template.title }}</div>
+          <div v-if="searchResults.length > 0" class="search-results" @contextmenu.prevent="null"
+            @selectstart.prevent="">
+            <div v-for="template in searchResults" :key="template.id" class="search-result-item">
+              <div class="template-title" @click="selectTemplate(template)">{{ template.title }}</div>
               <div class="template-meta">
-                <span class="template-disease">{{ template.disease }}</span>
-                <span class="template-type">{{ template.templateType }}</span>
+                <!-- 当sections个数为一个时，直接显示内容；当sections个数为多个时，显示每个section的title -->
+                <template v-if="template.sections && template.sections.length === 1">
+                  <span class="template-content" @click="selectTemplate(template)">{{ template.sections[0].content
+                  }}</span>
+                </template>
+                <template v-else-if="template.sections && template.sections.length > 1">
+                  <span v-for="(section, index) in template.sections" :key="index" class="section-title"
+                    @click="handleSectionClick(template, index)">
+                    {{ section.title }}
+                    <!-- <span v-if="index < template.sections.length - 1" class="separator">、</span> -->
+                  </span>
+                </template>
               </div>
             </div>
           </div>
@@ -35,39 +62,59 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { ref, watch, nextTick, onMounted, onUnmounted, useTemplateRef } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useTemplateStore } from '../stores/template'
 import { matchText } from '../utils/pinyin'
-import Icon from './common/Icon.vue'
+import Icon from '@/components/common/Icon.vue'
 import type { Template } from '../types'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { getMousePosition } from '../services/mouse'
 
-const templateStore = useTemplateStore()
+
 
 // 组件状态
 const isExpanded = ref(false)
 const searchKeyword = ref('')
 const searchResults = ref<Template[]>([])
-const searchInputRef = ref<HTMLInputElement>()
+const searchInputRef = useTemplateRef('searchInputRef')
+const searchIconRef = useTemplateRef('searchIconRef')
 const isInputFocused = ref(false)
 
 // 获取所有模板
+const templateStore = useTemplateStore()
 const { templates } = storeToRefs(templateStore)
 
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-const handleIconClick = async () => {
 
-  const webview = new WebviewWindow('main', {
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+
+const appWindow = getCurrentWebviewWindow()
+
+
+const handleIconDblClick = async () => {
+  console.log('双击了搜索图标')
+  let mainWebview = await WebviewWindow.getByLabel('main')
+  if (mainWebview) {
+    await mainWebview.show()
+    await mainWebview.setFocus()
+    return
+  }
+
+  mainWebview = new WebviewWindow('main', {
     url: 'index.html'
   });
-  webview.once('tauri://created', function () {
+  mainWebview.once('tauri://created', function (e) {
     // webview successfully created
+    console.log("main webview created successfully", e)
   });
-  webview.once('tauri://error', function () {
+  mainWebview.once('tauri://error', function (e) {
     // an error happened creating the webview
+    console.log("main webview created error", e)
   });
+}
+
+const handleIconClick = async () => {
+
   if (isExpanded.value) {
     collapseSearch()
   } else {
@@ -86,6 +133,36 @@ const handleIconClick = async () => {
 }
 
 /**
+ * 处理移动按钮点击
+ */
+const handleMoveClick = (e: Event) => {
+  e.stopPropagation()
+  console.log('移动按钮被点击')
+  // 这里可以添加移动窗口的逻辑
+}
+
+/**
+ * 处理锁定按钮点击
+ */
+const handleLockClick = (e: Event) => {
+  e.stopPropagation()
+  console.log('锁定按钮被点击')
+  // 这里可以添加锁定/解锁窗口的逻辑
+}
+
+/**
+ * 处理展开按钮点击
+ */
+const handleExpandClick = (e: Event) => {
+  e.stopPropagation()
+  console.log('展开按钮被点击')
+  // 这里可以添加展开窗口的逻辑
+}
+
+
+
+
+/**
  * 处理鼠标进入事件
  */
 const handleMouseEnter = () => {
@@ -94,12 +171,18 @@ const handleMouseEnter = () => {
   nextTick(() => {
     setTimeout(() => {
       if (searchInputRef.value && isExpanded.value) {
+        appWindow.setFocus()
         searchInputRef.value.focus()
       }
     }, 200)
   })
 }
 
+const handleSectionClick = (template: Template, index: number) => {
+  templateStore.selectTemplate(template.id)
+  console.log('点击了section', template.sections[index].title, template.sections[index].content)
+  // collapseSearch()
+}
 /**
  * 处理鼠标离开事件
  */
@@ -109,6 +192,13 @@ const handleMouseEnter = () => {
 //     collapseSearch()
 //   }
 // }
+
+const handleBlur = () => {
+  if (searchKeyword.value) {
+    return
+  }
+  collapseSearch()
+}
 
 /**
  * 处理输入框获得焦点
@@ -139,6 +229,20 @@ const collapseSearch = () => {
   searchKeyword.value = ''
   searchResults.value = []
   // showResults.value = false
+}
+
+/**
+ * 清除搜索内容
+ */
+const clearSearch = () => {
+  searchKeyword.value = ''
+  searchResults.value = []
+  // 清除后重新聚焦到输入框
+  nextTick(() => {
+    if (searchInputRef.value) {
+      searchInputRef.value.focus()
+    }
+  })
 }
 
 /**
@@ -186,8 +290,8 @@ function isTransparent(x: number, y: number): boolean {
   if (!el) return true;
   // 这里简单判断，如果是透明div返回true，否则false
   // 更精细可用canvas 2d context getImageData判定
-  // console.log(el)
-  if (el.id == "app") {
+  // console.log(el.nodeName)
+  if (el.id == "app" || el.nodeName == "HTML") {
     return true
   }
   return false
@@ -269,15 +373,16 @@ onUnmounted(() => {
   position: relative;
   display: flex;
   align-items: center;
-  flex-direction: row-reverse;
+  flex-direction: row;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   border-radius: 25px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
-  min-width: 50px;
+  min-width: 140px;
   height: 50px;
+  padding: 0 8px;
   /* padding: 0 15px; */
 }
 
@@ -304,6 +409,43 @@ onUnmounted(() => {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-right: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-button {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.action-button:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+  transform: translateY(-1px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.action-button:active {
+  transform: translateY(0) scale(0.95);
+  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.15);
+}
+
 .search-input-container {
   position: relative;
   flex: 1;
@@ -318,10 +460,34 @@ onUnmounted(() => {
   font-size: 14px;
   color: #333;
   padding: 20px;
+  padding-right: 40px;
+  /* 为清除按钮留出空间 */
 }
 
 .search-input::placeholder {
   color: #999;
+}
+
+.clear-button {
+  position: absolute;
+  right: 1px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #999;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.clear-button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #666;
 }
 
 .search-results {
@@ -343,14 +509,14 @@ onUnmounted(() => {
 
 .search-result-item {
   padding: 12px 16px;
-  cursor: pointer;
+  cursor: default;
   transition: all 0.2s;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.search-result-item:hover {
+/* .search-result-item:hover {
   background-color: rgba(102, 126, 234, 0.05);
-}
+} */
 
 .search-result-item:last-child {
   border-bottom: none;
@@ -362,6 +528,22 @@ onUnmounted(() => {
   color: #333;
   margin-bottom: 4px;
   line-height: 1.4;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin: -2px -4px 2px -4px;
+}
+
+.template-title:hover {
+  color: #667eea;
+  background-color: rgba(102, 126, 234, 0.05);
+  transform: translateX(2px);
+}
+
+.template-title:active {
+  transform: translateX(2px) scale(0.98);
+  background-color: rgba(102, 126, 234, 0.1);
 }
 
 .template-meta {
@@ -371,12 +553,60 @@ onUnmounted(() => {
   color: #666;
 }
 
-.template-disease,
-.template-type {
+.template-content {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.3;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+}
+
+.template-content:hover {
+  color: #555;
+  background-color: rgba(102, 126, 234, 0.05);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+.template-content:active {
+  transform: translateY(-1px) scale(0.98);
+  background-color: rgba(102, 126, 234, 0.1);
+}
+
+.section-title {
   padding: 2px 6px;
   background-color: rgba(102, 126, 234, 0.1);
   border-radius: 4px;
   font-size: 11px;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-block;
+}
+
+.section-title:hover {
+  background-color: rgba(102, 126, 234, 0.2);
+  color: #333;
+  transform: translateY(-1px) scale(1.05);
+  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.15);
+}
+
+.section-title:active {
+  transform: translateY(-1px) scale(1.02);
+  background-color: rgba(102, 126, 234, 0.25);
+  box-shadow: 0 1px 3px rgba(102, 126, 234, 0.2);
+}
+
+.separator {
+  margin: 0 2px;
+  color: #999;
 }
 
 .no-results {

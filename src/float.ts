@@ -1,7 +1,7 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { VueQueryPlugin, QueryClient } from '@tanstack/vue-query';
-import FloatWindow from './components/FloatingSearch.vue'
+import FloatWindow from './views/FloatingSearch.vue'
 import './style.css'
 
 /**

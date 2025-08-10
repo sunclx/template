@@ -266,17 +266,21 @@ pub async fn clear_templates(state: State<'_, AppState>) -> Result<String, Strin
 /// 创建悬浮搜索窗口
 #[tauri::command]
 pub async fn create_float_window(app_handle: AppHandle) -> Result<(), String> {
-    WebviewWindowBuilder::new(&app_handle, "float", WebviewUrl::App("float.html".into()))
-        .title("悬浮搜索")
-        .inner_size(300.0, 400.0)
-        .min_inner_size(250.0, 300.0)
-        .resizable(true)
-        .decorations(false)
-        .always_on_top(true)
-        .skip_taskbar(true)
-        .transparent(true)
-        .build()
-        .map_err(|e| format!("Failed to create float window: {}", e))?;
+    WebviewWindowBuilder::new(
+        &app_handle,
+        "floating",
+        WebviewUrl::App("float.html".into()),
+    )
+    .title("悬浮搜索")
+    .inner_size(300.0, 400.0)
+    .min_inner_size(250.0, 300.0)
+    .resizable(true)
+    .decorations(false)
+    .always_on_top(true)
+    .skip_taskbar(true)
+    .transparent(true)
+    .build()
+    .map_err(|e| format!("Failed to create float window: {}", e))?;
 
     Ok(())
 }
