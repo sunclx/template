@@ -5,6 +5,7 @@ use commands::*;
 use database::DatabaseManager;
 use std::sync::Mutex;
 
+pub static MAIN_WINDOW_TITLE: &str = "悬浮搜索";
 /// 应用状态，包含数据库管理器
 pub struct AppState {
     pub db: Mutex<Option<DatabaseManager>>,
@@ -16,6 +17,11 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .manage(AppState {
             db: Mutex::new(None),
+        })
+        .setup(|_app| {
+            observe_app();
+
+            Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             init_database,
@@ -33,7 +39,8 @@ pub fn run() {
             reset_tags,
             clear_templates,
             create_float_window,
-            get_mouse_position
+            get_mouse_position,
+            paste
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -2,8 +2,10 @@
   <div class="floating-search" @mouseenter="handleMouseEnter" @blur="handleBlur">
     <!-- 搜索图标 -->
     <div data-tauri-drag-region class="search-icon-container" :class="{ expanded: isExpanded }" ref="searchIconRef">
+      <Icon icon="mdi:magnify" size="50" class="search-icon" @click="handleIconClick" @dblclick="handleIconDblClick" />
+      
       <!-- 右侧小图标按钮组 -->
-      <div class="action-buttons" v-show="!isExpanded">
+      <!-- <div class="action-buttons" v-show="!isExpanded">
         <button class="action-button" @click="handleMoveClick" title="移动">
           <Icon icon="mdi:drag" size="16" />
         </button>
@@ -13,9 +15,7 @@
         <button class="action-button" @click="handleExpandClick" title="展开">
           <Icon icon="mdi:arrow-expand" size="16" />
         </button>
-      </div>
-      
-      <Icon icon="mdi:magnify" size="50" class="search-icon" @click="handleIconClick" @dblclick="handleIconDblClick" />
+      </div> -->
 
       <!-- 展开的搜索框 -->
       <Transition name="search-expand">
@@ -70,6 +70,7 @@ import Icon from '@/components/common/Icon.vue'
 import type { Template } from '../types'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { getMousePosition } from '../services/mouse'
+import { paste } from '../services/paste'
 
 
 
@@ -181,10 +182,17 @@ const handleMouseEnter = () => {
 const handleSectionClick = (template: Template, index: number) => {
   templateStore.selectTemplate(template.id)
   console.log('点击了section', template.sections[index].title, template.sections[index].content)
+
+  // 复制内容到剪贴板
+  navigator.clipboard.writeText(template.sections[index].content)
+
+
+
+  paste(template.sections[index].content)
   // collapseSearch()
 }
 /**
- * 处理鼠标离开事件
+ * 处理鼠标离开事件平素体健，否认慢性病史。发热、咳嗽、咳痰5天
  */
 // const handleMouseLeave = () => {
 //   // 如果输入框没有焦点，则收起搜索框
@@ -373,16 +381,14 @@ onUnmounted(() => {
   position: relative;
   display: flex;
   align-items: center;
-  flex-direction: row;
+  flex-direction: row-reverse;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   border-radius: 25px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
-  min-width: 140px;
   height: 50px;
-  padding: 0 8px;
   /* padding: 0 15px; */
 }
 
@@ -415,7 +421,6 @@ onUnmounted(() => {
   gap: 4px;
   margin-right: 8px;
   align-items: center;
-  justify-content: center;
 }
 
 .action-button {
